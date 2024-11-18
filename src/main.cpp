@@ -2,73 +2,78 @@
 #include "lemlib/api.hpp" // IWYU pragma: keep
 
 // motorsssssssss
-pros::MotorGroup left_motors({-9, 20, -10} , pros::MotorGearset::blue); // left motors on ports 1, 2, 3
-pros::MotorGroup right_motors({-1, 5, 7} , pros::MotorGearset::blue ); // right motors on ports 4, 5, 6
+
+pros::MotorGroup
+    left_motors({-9, 20, -10},
+                pros::MotorGearset::blue); // left motors on ports 1, 2, 3
+pros::MotorGroup
+    right_motors({-1, 5, 7},
+                 pros::MotorGearset::blue); // right motors on ports 4, 5, 6
 
 // drivetrain settings
-lemlib::Drivetrain drivetrain(&left_motors, // left motor group
-                              &right_motors, // right motor group
-                              12.5, // 10 inch track width
+lemlib::Drivetrain drivetrain(&left_motors,             // left motor group
+                              &right_motors,            // right motor group
+                              12.5,                     // 10 inch track width
                               lemlib::Omniwheel::NEW_4, // using new 4" omnis
-                              300, // drivetrain rpm is 360
+                              300,                      // drivetrain rpm is 360
                               2 // horizontal drift is 2 (for now)
 );
 
-// create an imu on port 10
+// create an imu on port 11
 pros::Imu imu(11);
 
-lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
-                            nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
-                            nullptr, // horizontal tracking wheel 1
-                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            &imu // inertial sensor
+lemlib::OdomSensors sensors(
+    nullptr, // vertical tracking wheel 1, set to null
+    nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
+    nullptr, // horizontal tracking wheel 1
+    nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a
+             // second one
+    &imu     // inertial sensor
 );
 
 // lateral PID controller
-lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              3, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in inches
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in inches
-                                              500, // large error range timeout, in milliseconds
-                                              20 // maximum acceleration (slew)
-);
+lemlib::ControllerSettings
+    lateral_controller(7,  // proportional gain (kP)
+                       0,   // integral gain (kI)
+                       30,   // derivative gain (kD)
+                       3,   // anti windup
+                       1,   // small error range, in inches
+                       100, // small error range timeout, in milliseconds
+                       3,   // large error range, in inches
+                       500, // large error range timeout, in milliseconds
+                       0   // maximum acceleration (slew)
+    );
 
 // angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              10, // derivative gain (kD)
-                                              3, // anti windup
-                                              1, // small error range, in degrees
-                                              100, // small error range timeout, in milliseconds
-                                              3, // large error range, in degrees
-                                              500, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-);
-
+lemlib::ControllerSettings
+    angular_controller( 2, // proportional gain (kP)
+						0, // integral gain (kI)
+						10, // derivative gain (kD)
+						0, // anti windup
+						0, // small error range, in inches
+						0, // small error range timeout, in milliseconds
+						0, // large error range, in inches
+						0, // large error range timeout, in milliseconds
+						0 // maximum acceleration (slew)
+    );
 
 // input curve for throttle input during driver control
-lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
-                                     10, // minimum output where drivetrain will move out of 127
-                                     1.019 // expo curve gain
-);
+lemlib::ExpoDriveCurve
+    throttle_curve(3,   // joystick deadband out of 127
+                   10,  // minimum output where drivetrain will move out of 127
+                   1.03 // expo curve gain
+    );
 
 // input curve for steer input during driver control
-lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
-                                  10, // minimum output where drivetrain will move out of 127
-                                  1.016 // expo curve gain
-);
+lemlib::ExpoDriveCurve
+    steer_curve(3,   // joystick deadband out of 127
+                10,  // minimum output where drivetrain will move out of 127
+                1.01 // expo curve gain
+    );
 
 // create the chassis
-lemlib::Chassis chassis(drivetrain,
-                        lateral_controller,
-                        angular_controller,
-                        sensors,
-                        &throttle_curve, 
-                        &steer_curve
-);
+lemlib::Chassis chassis(drivetrain, lateral_controller, angular_controller,
+                        sensors, &throttle_curve, &steer_curve);
 
 /**
  * A callback function for LLEMU's center button.
@@ -77,13 +82,13 @@ lemlib::Chassis chassis(drivetrain,
  * "I was pressed!" and nothing.
  */
 void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
+  static bool pressed = false;
+  pressed = !pressed;
+  if (pressed) {
+    pros::lcd::set_text(2, "I was pressed!");
+  } else {
+    pros::lcd::clear_line(2);
+  }
 }
 
 /**
@@ -93,13 +98,26 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+  pros::lcd::initialize();
+  chassis.calibrate();
 
-	pros::lcd::register_btn1_cb(on_center_button);
+  pros::lcd::register_btn1_cb(on_center_button);
 
-	pros::adi::DigitalOut mogo ('A');
-	pros::Motor intake (2);
+  pros::adi::DigitalOut mogo('A');
+  pros::Motor intake(2);
+
+  pros::Task screen_task([&](){
+	while(true){
+		pros::lcd::print(1, "X: %f", chassis.getPose().x);
+		pros::lcd::print(2, "Y: %f", chassis.getPose().y);
+		pros::lcd::print(3, "Theta: %f", chassis.getPose().theta);
+
+        
+
+
+		pros::delay(20);
+	}
+  });
 }
 
 /**
@@ -131,12 +149,41 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+//load "first.txt"
+// the file should be in the "static" folder in the project root directory
+// this should also be done outside of any functions, otherwise it won't compile
+ASSET(first_txt); // we replace "." with "_" to make the asset name valid
+
+// autonomous function in your project. The function that runs during the autonomous period
 void autonomous() {
+    // Motors and clamp initialization
+    pros::Motor intake(2);
+    pros::adi::DigitalOut mogoClamp('A'); // Mogo clamp mechanism control
 
-chassis.calibrate();
+    // Step 1: Move to the mogo and clamp it
+    chassis.moveToPoint(0, -23, 4000, {.forwards = true}, true);
+    pros::delay(300); // Allow time to settle
+    mogoClamp.set_value(true); // Clamp the mogo
+    pros::delay(500); // Allow time for clamping
 
+    // Step 2: Move to the next position to potentially score or reposition
+    chassis.moveToPoint(-23, -23, 4000, {.forwards = true}, true);
+
+    // Step 3: Navigate towards the scoring area or designated target zone
+    chassis.moveToPoint(-23, -46, 4000, {.forwards = true}, true);
+
+    // Step 4: Automated intake for picking up rings/disks
+    intake.move_velocity(500); // Activate intake to collect rings/disks
+    pros::delay(2000); // Adjust time based on field setup and scoring opportunity
+    intake.move_velocity(0); // Stop intake
+
+    // Step 5: Position near a scoring zone and release the mogo (if applicable)
+    chassis.moveToPoint(0, -45, 4000, {.forwards = true}, true);
+    mogoClamp.set_value(false); // Release the mogo
+    pros::delay(500); // Allow time for release
+
+    // Optional additional actions (e.g., realignment, further intake, etc.)
 }
-
 
 
 /**
@@ -153,82 +200,96 @@ chassis.calibrate();
  * task, not resume it from where it left off.
  */
 
-pros::Controller controller(pros::E_CONTROLLER_MASTER);
-pros::Motor intake (2);
-pros::adi::DigitalOut mogo ('A');
 
-pros::Distance distance (19);
+bool lastL1 = false; // Keep track of the last state of the button
 
 
 
+pros::Controller controller(pros::E_CONTROLLER_MASTER); // define controller
+pros::Motor intake (2);// intake motor
+pros::adi::DigitalOut mogo ('A'); // mogo clamp pneumatics
+pros::Distance distance (19); // distance sensor
 
+ // Declare the controller once
+//#include "pros/tasks.hpp"
 
+// Variables shared between tasks
+bool currentButtonState = false;      // Current state of the L1 button
+bool lastButtonState = false;         // Last state of the L1 button
+bool manualOverride = false;          // Indicates if manual override is active
+bool mogoState = false;               // Pneumatic clamp state
+bool autoClamped = false;             // Flag indicating if the clamp was automatically triggered
+pros::Mutex mogoMutex;                // Mutex to prevent race conditions
+
+const double DISTANCE_THRESHOLD = 30; // Example threshold in your distance sensor's unit
+
+// Task to handle clamp reset logic
+void clampResetTask(void* param) {
+    while (true) {
+        mogoMutex.take();
+        if (!mogoState) {
+            autoClamped = false;      // Reset auto-clamp flag
+            manualOverride = false;   // Disable manual override
+        }
+        mogoMutex.give();
+        pros::delay(10);              // Short delay to reduce CPU usage
+    }
+}
+
+// Main operator control function
 void opcontrol() {
+    // Start the clamp reset task
+    pros::Task resetTask(clampResetTask);
 
-// Variables for pneumatics and control
-bool currentButtonState = controller.get_digital(DIGITAL_L1);
-bool lastButtonState = false;
-bool mogoState = false;        // Initial state of the pneumatic
-int lastToggleTime = 0;       // Time of the last toggle
-
-// Threshold for distance and delay (in milliseconds)
-const int clampDistanceThreshold = 50;    // Distance thresholdA
-	
     // loop forever
     while (true) {
-        // get left y and right x positions
+        // Get left Y and right X positions for arcade drive
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        // move the robot
+        // Move the robot using arcade drive
         chassis.arcade(leftY, rightX);
 
-
-
-
-
-
-
-		//intake control block (hold)
-		if (controller.get_digital(DIGITAL_R1)) {
-			intake.move_velocity(600); 
-			}
-
-		else if (controller.get_digital(DIGITAL_R2)) {
-			intake.move_velocity(-600);
-			}
-
-		else {
-			intake.move_velocity(0);
-			}
-
-		  
-
-        int currentDistance = distance.get();
-
-        // Automatically clamp when distance is below the threshold
-        if (currentDistance < clampDistanceThreshold) {
-             // Clamp down
-            mogo.set_value(true);
+        // Intake control block (hold)
+        if (controller.get_digital(DIGITAL_R1)) {
+            intake.move_velocity(600);
+        } else if (controller.get_digital(DIGITAL_R2)) {
+            intake.move_velocity(-600);
+        } else {
+            intake.move_velocity(0);
         }
 
-        // Check if button is pressed to release
-        if (currentButtonState) {
-            // Release the clamp
-            mogo.set_value(false);
+        //////////////////////////////////////////////////////////////////////////
+        // Get the current state of the L1 button
+        currentButtonState = controller.get_digital(DIGITAL_L1);
+
+        // Check if the L1 button was just pressed (edge detection)
+        if (currentButtonState && !lastButtonState) {
+            mogoMutex.take();
+            manualOverride = !manualOverride;  // Toggle manual override state
+            mogoState = !mogoState;            // Toggle the clamp state manually
+            mogo.set_value(mogoState);         // Apply the manual state to the clamp
+            mogoMutex.give();
         }
 
+        // Auto-clamp logic (only active if manual override is not engaged)
+        if (!manualOverride) {
+            double distanceValue = distance.get();  // Get the distance from the sensor
 
-        // Update last button state for the next loop iteration
+            // Trigger auto-clamping if the robot is close enough to an object
+            if (distanceValue < DISTANCE_THRESHOLD && !autoClamped) {
+                mogoMutex.take();
+                mogoState = true;            // Close the clamp automatically
+                mogo.set_value(mogoState);   // Activate pneumatic clamp
+                autoClamped = true;          // Mark auto-clamp as triggered
+                mogoMutex.give();
+            }
+        }
+
+        // Update the last button state for the next loop iteration
         lastButtonState = currentButtonState;
 
-        // Update last button state for next loop iteration
-      
-
-        
-
-
-        // delay to save resources
-        pros::delay(25);
+        // Delay to save resources
+        pros::delay(25);  // Delay for stability
     }
 }
