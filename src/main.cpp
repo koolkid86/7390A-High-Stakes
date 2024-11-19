@@ -270,7 +270,7 @@ void opcontrol() {
         }
 
         // Update the last button state for the next loop iteration
-        lastButtonState = currentButtonState;
+        lastButtonState = currentButtonState; 
 
         // Delay to save resources
         pros::delay(25);  // Delay for stability
