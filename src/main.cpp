@@ -201,7 +201,7 @@ void autonomous() {
  */
 
 
-bool lastL1 = false; // Keep track of the last state of the button
+
 
 
 
@@ -209,38 +209,16 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER); // define controller
 pros::Motor intake (2);// intake motor
 pros::adi::DigitalOut mogo ('A'); // mogo clamp pneumatics
 pros::Distance distance (19); // distance sensor
-
- // Declare the controller once
-//#include "pros/tasks.hpp"
-
-// Variables shared between tasks
+const double DISTANCE_THRESHOLD = 30; // Example threshold in your distance sensor's unit
 bool currentButtonState = false;      // Current state of the L1 button
 bool lastButtonState = false;         // Last state of the L1 button
 bool manualOverride = false;          // Indicates if manual override is active
 bool mogoState = false;               // Pneumatic clamp state
 bool autoClamped = false;             // Flag indicating if the clamp was automatically triggered
-pros::Mutex mogoMutex;                // Mutex to prevent race conditions
+int autoClampLastActivated = 0;       // Timestamp of the last auto-clamp action in milliseconds
+const int AUTO_CLAMP_COOLDOWN = 4000;  // Cooldown period in milliseconds
 
-const double DISTANCE_THRESHOLD = 30; // Example threshold in your distance sensor's unit
-
-// Task to handle clamp reset logic
-void clampResetTask(void* param) {
-    while (true) {
-        mogoMutex.take();
-        if (!mogoState) {
-            autoClamped = false;      // Reset auto-clamp flag
-            manualOverride = false;   // Disable manual override
-        }
-        mogoMutex.give();
-        pros::delay(10);              // Short delay to reduce CPU usage
-    }
-}
-
-// Main operator control function
 void opcontrol() {
-    // Start the clamp reset task
-    pros::Task resetTask(clampResetTask);
-
     // loop forever
     while (true) {
         // Get left Y and right X positions for arcade drive
@@ -265,24 +243,28 @@ void opcontrol() {
 
         // Check if the L1 button was just pressed (edge detection)
         if (currentButtonState && !lastButtonState) {
-            mogoMutex.take();
-            manualOverride = !manualOverride;  // Toggle manual override state
-            mogoState = !mogoState;            // Toggle the clamp state manually
-            mogo.set_value(mogoState);         // Apply the manual state to the clamp
-            mogoMutex.give();
+            manualOverride = true;            // Enable manual override
+            mogoState = !mogoState;           // Toggle the clamp state manually
+            mogo.set_value(mogoState);        // Apply the manual state to the clamp
+
+            if (!mogoState) {
+                autoClamped = false;          // Reset auto-clamp flag if manually unclamped
+                manualOverride = false;
+            }
         }
 
         // Auto-clamp logic (only active if manual override is not engaged)
-        if (!manualOverride) {
+        int currentTime = pros::millis();     // Get the current time in milliseconds
+        if (!manualOverride && (currentTime - autoClampLastActivated >= AUTO_CLAMP_COOLDOWN)) {
             double distanceValue = distance.get();  // Get the distance from the sensor
 
             // Trigger auto-clamping if the robot is close enough to an object
             if (distanceValue < DISTANCE_THRESHOLD && !autoClamped) {
-                mogoMutex.take();
-                mogoState = true;            // Close the clamp automatically
-                mogo.set_value(mogoState);   // Activate pneumatic clamp
-                autoClamped = true;          // Mark auto-clamp as triggered
-                mogoMutex.give();
+                mogoState = true;             // Close the clamp automatically
+                mogo.set_value(mogoState);    // Activate pneumatic clamp
+                autoClamped = true;           // Mark auto-clamp as triggered
+                controller.rumble("--");       // Provide haptic feedback
+                autoClampLastActivated = currentTime; // Record the time of this action
             }
         }
 
