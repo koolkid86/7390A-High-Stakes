@@ -301,7 +301,7 @@
       "description": "facts",
       "icon": "pizza",
       "slot": 2,
-      "after": "run"
+      "after": "screen"
     },
     "use_early_access": false
   }

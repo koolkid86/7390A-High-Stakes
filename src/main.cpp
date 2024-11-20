@@ -1,7 +1,6 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 
-// test commit to see if I can commit from this laptop
 // motorsssssssss
 
 pros::MotorGroup
@@ -32,31 +31,28 @@ lemlib::OdomSensors sensors(
     &imu     // inertial sensor
 );
 
-// lateral PID controller
-lemlib::ControllerSettings
-    lateral_controller(7,  // proportional gain (kP)
-                       0,   // integral gain (kI)
-                       30,   // derivative gain (kD)
-                       3,   // anti windup
-                       1,   // small error range, in inches
-                       100, // small error range timeout, in milliseconds
-                       3,   // large error range, in inches
-                       500, // large error range timeout, in milliseconds
-                       0   // maximum acceleration (slew)
-    );
+lemlib::ControllerSettings lateral_controller(30, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              10, // derivative gain (kD)
+                                              0, // anti windup
+                                              0, // small error range, in inches
+                                              0, // small error range timeout, in milliseconds
+                                              0, // large error range, in inches
+                                              0, // large error range timeout, in milliseconds
+                                              70 // maximum acceleration (slew)
+);
 
 // angular PID controller
-lemlib::ControllerSettings
-    angular_controller( 2, // proportional gain (kP)
-						0, // integral gain (kI)
-						10, // derivative gain (kD)
-						0, // anti windup
-						0, // small error range, in inches
-						0, // small error range timeout, in milliseconds
-						0, // large error range, in inches
-						0, // large error range timeout, in milliseconds
-						0 // maximum acceleration (slew)
-    );
+lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              24, // derivative gain (kD)
+                                              0, // anti windup
+                                              0, // small error range, in inches
+                                              0, // small error range timeout, in milliseconds
+                                              0, // large error range, in inches
+                                              0, // large error range timeout, in milliseconds
+                                              80 // maximum acceleration (slew)
+);
 
 // input curve for throttle input during driver control
 lemlib::ExpoDriveCurve
@@ -154,36 +150,30 @@ void competition_initialize() {}
 // the file should be in the "static" folder in the project root directory
 // this should also be done outside of any functions, otherwise it won't compile
 ASSET(first_txt); // we replace "." with "_" to make the asset name valid
-
+pros::Distance distance (19); 
 // autonomous function in your project. The function that runs during the autonomous period
 void autonomous() {
     // Motors and clamp initialization
     pros::Motor intake(2);
     pros::adi::DigitalOut mogoClamp('A'); // Mogo clamp mechanism control
 
-    // Step 1: Move to the mogo and clamp it
-    chassis.moveToPoint(0, -23, 4000, {.forwards = true}, true);
-    pros::delay(300); // Allow time to settle
-    mogoClamp.set_value(true); // Clamp the mogo
-    pros::delay(500); // Allow time for clamping
+    chassis.setPose(0, 0, 0);
 
-    // Step 2: Move to the next position to potentially score or reposition
-    chassis.moveToPoint(-23, -23, 4000, {.forwards = true}, true);
+   
+    chassis.moveToPoint(0, -45, 2500,    {.forwards = false, .maxSpeed=75, }, true);
+    while(chassis.isInMotion() && distance.get() > 30){ 
+        pros::delay(10); // save cpu resources
+    }
+    mogoClamp.set_value(true);
+    chassis.cancelMotion(); // cancel the motion once the robot detects mogo is in the bot and clamped
 
-    // Step 3: Navigate towards the scoring area or designated target zone
-    chassis.moveToPoint(-23, -46, 4000, {.forwards = true}, true);
+    //pros::delay(100); // wait for mogo to clamp and settle
 
-    // Step 4: Automated intake for picking up rings/disks
-    intake.move_velocity(500); // Activate intake to collect rings/disks
-    pros::delay(2000); // Adjust time based on field setup and scoring opportunity
-    intake.move_velocity(0); // Stop intake
+    chassis.moveToPoint(17, -40,  3000, {.maxSpeed=90}, true);
+    intake.move_velocity(600);
+    chassis.moveToPoint(18, -41, 1000) ;
 
-    // Step 5: Position near a scoring zone and release the mogo (if applicable)
-    chassis.moveToPoint(0, -45, 4000, {.forwards = true}, true);
-    mogoClamp.set_value(false); // Release the mogo
-    pros::delay(500); // Allow time for release
-
-    // Optional additional actions (e.g., realignment, further intake, etc.)
+   
 }
 
 
@@ -209,7 +199,7 @@ void autonomous() {
 pros::Controller controller(pros::E_CONTROLLER_MASTER); // define controller
 pros::Motor intake (2);// intake motor
 pros::adi::DigitalOut mogo ('A'); // mogo clamp pneumatics
-pros::Distance distance (19); // distance sensor
+// distance sensor
 const double DISTANCE_THRESHOLD = 30; // Example threshold in your distance sensor's unit
 bool currentButtonState = false;      // Current state of the L1 button
 bool lastButtonState = false;         // Last state of the L1 button
@@ -270,7 +260,11 @@ void opcontrol() {
         }
 
         // Update the last button state for the next loop iteration
-        lastButtonState = currentButtonState; 
+        lastButtonState = currentButtonState;
+///////////////////////////////////////////////////////////////////////////////////////////////
+        double intakeTemp = intake.get_temperature(); // Get the intake motor's temperature
+        controller.clear(); // Clear the controller screen to prevent overlap
+        controller.set_text(0, 0, "Temp: " + std::to_string(intakeTemp) + " C"); // Update temperature
 
         // Delay to save resources
         pros::delay(25);  // Delay for stability
