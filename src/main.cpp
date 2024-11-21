@@ -31,6 +31,8 @@ lemlib::OdomSensors sensors(
     &imu     // inertial sensor
 );
 
+//need to add wallstake pid with the vex encoders
+
 lemlib::ControllerSettings lateral_controller(30, // proportional gain (kP)
                                               0, // integral gain (kI)
                                               10, // derivative gain (kD)
