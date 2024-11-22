@@ -263,10 +263,6 @@ void opcontrol() {
 
         // Update the last button state for the next loop iteration
         lastButtonState = currentButtonState;
-///////////////////////////////////////////////////////////////////////////////////////////////
-        double intakeTemp = intake.get_temperature(); // Get the intake motor's temperature
-        controller.clear(); // Clear the controller screen to prevent overlap
-        controller.set_text(0, 0, "Temp: " + std::to_string(intakeTemp) + " C"); // Update temperature
 
         // Delay to save resources
         pros::delay(25);  // Delay for stability
