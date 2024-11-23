@@ -1,5 +1,17 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/adi.hpp"
+#include "pros/llemu.hpp"
+
+pros::adi::DigitalOut mogo('A');
+pros::Motor intake(2);
+#define QUAD_TOP_PORT 'C'
+#define QUAD_BOTTOM_PORT 'B'
+
+
+
+pros::adi::Encoder encoder('C', 'D', false); // Replace 'A' and 'B' with the actual ports.
+
 
 // motorsssssssss
 
@@ -99,26 +111,24 @@ void on_center_button() {
 void initialize() {
   pros::lcd::initialize();
   chassis.calibrate();
-
   pros::lcd::register_btn1_cb(on_center_button);
 
-  pros::adi::DigitalOut mogo('A');
-  pros::Motor intake(2);
-
-  pros::Task screen_task([&](){
-	while(true){
-		pros::lcd::print(1, "X: %f", chassis.getPose().x);
-		pros::lcd::print(2, "Y: %f", chassis.getPose().y);
-		pros::lcd::print(3, "Theta: %f", chassis.getPose().theta);
-
-        
+  encoder.reset(); 
 
 
-		pros::delay(20);
-	}
-  });
+  pros::lcd::print(5, "Initial Encoder Ticks: %d", encoder.get_value());
+
+  pros::Task screen_task([&]() {
+    while (true) {
+        pros::lcd::print(1, "X: %f", chassis.getPose().x);
+        pros::lcd::print(2, "Y: %f", chassis.getPose().y);
+        pros::lcd::print(3, "Theta: %f", chassis.getPose().theta);
+        pros::lcd::print(4, "Encoder Ticks: %d", encoder.get_value());
+        pros::delay(20);
+    }
+});
+
 }
-
 /**
  * Runs while the robot is in the disabled state of Field Management System or
  * the VEX Competition Switch, following either autonomous or opcontrol. When
@@ -151,7 +161,7 @@ void competition_initialize() {}
 //load "first.txt"
 // the file should be in the "static" folder in the project root directory
 // this should also be done outside of any functions, otherwise it won't compile
-ASSET(first_txt); // we replace "." with "_" to make the asset name valid
+// we replace "." with "_" to make the asset name valid
 pros::Distance distance (19); 
 // autonomous function in your project. The function that runs during the autonomous period
 void autonomous() {
@@ -199,8 +209,7 @@ void autonomous() {
 
 
 pros::Controller controller(pros::E_CONTROLLER_MASTER); // define controller
-pros::Motor intake (2);// intake motor
-pros::adi::DigitalOut mogo ('A'); // mogo clamp pneumatics
+
 // distance sensor
 const double DISTANCE_THRESHOLD = 30; // Example threshold in your distance sensor's unit
 bool currentButtonState = false;      // Current state of the L1 button
@@ -210,8 +219,17 @@ bool mogoState = false;               // Pneumatic clamp state
 bool autoClamped = false;             // Flag indicating if the clamp was automatically triggered
 int autoClampLastActivated = 0;       // Timestamp of the last auto-clamp action in milliseconds
 const int AUTO_CLAMP_COOLDOWN = 4000;  // Cooldown period in milliseconds
+pros::Motor arm(8); 
+
+
+
+
 
 void opcontrol() {
+
+    
+
+    arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD); //same as ^
     // loop forever
     while (true) {
         // Get left Y and right X positions for arcade drive
@@ -220,6 +238,33 @@ void opcontrol() {
 
         // Move the robot using arcade drive
         chassis.arcade(leftY, rightX);
+
+
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)){
+            arm.move_velocity(600);
+        }
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+            arm.move_velocity(-600);
+        }
+        else{
+            arm.move_velocity(0);
+        }
+        
+
+        
+
+
+
+       if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+
+
+                
+                // Delay to save resources
+        
+        }
+
+
+
 
         // Intake control block (hold)
         if (controller.get_digital(DIGITAL_R1)) {
@@ -261,10 +306,17 @@ void opcontrol() {
             }
         }
 
+         
+
         // Update the last button state for the next loop iteration
         lastButtonState = currentButtonState;
+/////////////////////////////////////////////////////////////////////////////////////////
 
-        // Delay to save resources
-        pros::delay(25);  // Delay for stability
-    }
+
+    
+
+
+
+    pros::delay(25);  // Delay for stability
+}
 }
