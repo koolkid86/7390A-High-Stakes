@@ -10,7 +10,7 @@ pros::Motor intake(2);
 
 
 
-pros::adi::Encoder encoder('C', 'D', false); // Replace 'A' and 'B' with the actual ports.
+pros::adi::Encoder encoder('C', 'D', true); // Replace 'A' and 'B' with the actual ports.
 
 
 // motorsssssssss
@@ -177,13 +177,15 @@ void autonomous() {
         pros::delay(10); // save cpu resources
     }
     mogoClamp.set_value(true);
+     pros::delay(100); // wait for mogo to clamp and settle
     chassis.cancelMotion(); // cancel the motion once the robot detects mogo is in the bot and clamped
 
-    //pros::delay(100); // wait for mogo to clamp and settle
 
-    chassis.moveToPoint(17, -40,  3000, {.maxSpeed=90}, true);
+    //pros::delay(200); // wait for mogo to clamp and settle
+
+    chassis.moveToPoint(17, -38,  3000, {.maxSpeed=90}, true);
     intake.move_velocity(600);
-    chassis.moveToPoint(18, -41, 1000) ;
+    chassis.moveToPoint(18, -40, 1000) ;
 
    
 }
@@ -206,8 +208,6 @@ void autonomous() {
 
 
 
-
-
 pros::Controller controller(pros::E_CONTROLLER_MASTER); // define controller
 
 // distance sensor
@@ -223,13 +223,42 @@ pros::Motor arm(8);
 
 
 
+// Define PID constants
+const double kP = 0.5;   // Proportional gain
+const double kI = 0.001; // Integral gain
+const double kD = 0.1;   // Derivative gain
+
+// Define target positions
+const int ARM_POSITION_1 = 120; // Replace with your desired encoder value
+const int ARM_POSITION_2 = 17; // Replace with your desired encoder value
+
+// PID controller variables
+double targetPosition = ARM_POSITION_1; // Initial target position
+double error = 0;
+double lastError = 0;
+double integral = 0;
+double derivative = 0;
+double output = 0;
+
+// Button toggle logic
+bool armButtonState = false;
+bool lastArmButtonState = false;
+bool xButtonState = false;
 
 
 void opcontrol() {
 
     
 
-    arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD); //same as ^
+    pros::Motor arm(8);
+    pros::Controller controller(pros::E_CONTROLLER_MASTER);
+
+    // Set the arm motor to hold its position when stopped
+    arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+
+
+
     // loop forever
     while (true) {
         // Get left Y and right X positions for arcade drive
@@ -239,29 +268,49 @@ void opcontrol() {
         // Move the robot using arcade drive
         chassis.arcade(leftY, rightX);
 
+   
 
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)){
-            arm.move_velocity(600);
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+          // Toggle target position with L1 button
+        armButtonState = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
+        if (armButtonState && !lastArmButtonState) {
+            // Toggle between positions
+            targetPosition = (targetPosition == ARM_POSITION_1) ? ARM_POSITION_2 : ARM_POSITION_1;
         }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
-            arm.move_velocity(-600);
+        lastArmButtonState = armButtonState;
+
+        // Move to zero position with X button
+        xButtonState = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
+        if (xButtonState) {
+            targetPosition = 0; // Override target position to zero
         }
-        else{
-            arm.move_velocity(0);
+
+        // PID control for the arm
+        int currentPosition = encoder.get_value(); // Read the encoder
+        error = targetPosition - currentPosition;     // Calculate error
+        integral += error;                            // Update integral
+        derivative = error - lastError;               // Calculate derivative
+        output = (kP * error) + (kI * integral) + (kD * derivative); // PID formula
+        lastError = error;                            // Update last error
+
+        // Limit output to prevent excessive speed
+        output = std::clamp(output, -127.0, 127.0);
+
+        // Set motor power
+        arm.move_voltage(output * 120); // Convert to millivolts for PROS
+
+        // Optional: Reset integral if the error is negligible to avoid windup
+        if (std::abs(error) < 10) {
+            integral = 0;
         }
-        
-
-        
 
 
+        ///////////////////////////////////////////////////////////////////////////////////////////
 
-       if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-
-
-                
-                // Delay to save resources
-        
-        }
 
 
 
@@ -320,3 +369,9 @@ void opcontrol() {
     pros::delay(25);  // Delay for stability
 }
 }
+
+
+
+
+
+
