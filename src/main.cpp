@@ -183,9 +183,9 @@ void autonomous() {
 
     //pros::delay(200); // wait for mogo to clamp and settle
 
-    chassis.moveToPoint(16, -42,  3000, {.maxSpeed=90}, true);
+    chassis.moveToPoint(16, -40,  3000, {.maxSpeed=90}, true);
     intake.move_velocity(600);
-    chassis.moveToPoint(18, -40, 1000) ;
+    chassis.moveToPoint(18, -41, 1000) ;
 
    
 }
