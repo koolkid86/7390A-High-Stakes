@@ -8,6 +8,10 @@ pros::Motor intake(2);
 #define QUAD_TOP_PORT 'C'
 #define QUAD_BOTTOM_PORT 'B'
 
+//vision::signature BLUEBOX (1, -4505, -3449, -3978, 3969, 6799, 5384, 2.500, 0);
+
+//vision::signature REDBOX (3, 6403, 10109, 8256, -1377, -381, -880, 2.400, 0);
+
 
 
 pros::adi::Encoder encoder('C', 'D', true); // Replace 'A' and 'B' with the actual ports.
