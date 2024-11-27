@@ -12,6 +12,8 @@ pros::Motor intake(2);
 
 //vision::signature REDBOX (3, 6403, 10109, 8256, -1377, -381, -880, 2.400, 0);
 
+//vision::signature NOTBLACK (4, -1025, 393, -316, -1821, 1, -910, 2.500, 0);
+
 
 
 pros::adi::Encoder encoder('C', 'D', true); // Replace 'A' and 'B' with the actual ports.
