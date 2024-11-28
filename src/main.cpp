@@ -9,12 +9,6 @@ pros::Motor intake1(8);
 #define QUAD_TOP_PORT 'C'
 #define QUAD_BOTTOM_PORT 'B'
 
-//vision::signature BLUEBOX (1, -4505, -3449, -3978, 3969, 6799, 5384, 2.500, 0);
-
-//vision::signature REDBOX (3, 6403, 10109, 8256, -1377, -381, -880, 2.400, 0);
-
-//vision::signature NOTBLACK (4, -1025, 393, -316, -1821, 1, -910, 2.500, 0);
-
 
 
 pros::adi::Encoder encoder('C', 'D', true); // Replace 'A' and 'B' with the actual ports.
@@ -219,19 +213,23 @@ void autonomous() {
 
    
     chassis.moveToPoint(0, -45, 2500,    {.forwards = false, .maxSpeed=75, }, true);
-    while(chassis.isInMotion() && distance.get() > 30){ 
+    while(chassis.isInMotion() && distance.get() > 32){ 
         pros::delay(10); // save cpu resources
     }
-    mogoClamp.set_value(true);
-     pros::delay(100); // wait for mogo to clamp and settle
     chassis.cancelMotion(); // cancel the motion once the robot detects mogo is in the bot and clamped
+     pros::delay(100); // wait for mogo to clamp and settle
+    mogoClamp.set_value(true);
 
 
     //pros::delay(200); // wait for mogo to clamp and settle
 
-    chassis.moveToPoint(16, -40,  3000, {.maxSpeed=90}, true);
+    //chassis.moveToPoint(9.4, -32.36,  3000, {.maxSpeed=90}, true);
     intake.move_velocity(600);
-    chassis.moveToPoint(18, -41, 1000) ;
+    chassis.moveToPoint(18, -37, 1000);
+    chassis.moveToPoint(25, -52, 1000);
+    chassis.turnToHeading(270, 2000);
+    chassis.moveToPoint(28, -60, 1000);
+
 
    
 }
@@ -377,7 +375,6 @@ void opcontrol() {
     pros::delay(25);  // Delay for stability
 }
 }
-
 
 
 
