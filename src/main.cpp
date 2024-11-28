@@ -5,6 +5,7 @@
 
 pros::adi::DigitalOut mogo('A');
 pros::Motor intake(2);
+pros::Motor intake1(8);
 #define QUAD_TOP_PORT 'C'
 #define QUAD_BOTTOM_PORT 'B'
 
@@ -17,7 +18,7 @@ pros::Motor intake(2);
 
 
 pros::adi::Encoder encoder('C', 'D', true); // Replace 'A' and 'B' with the actual ports.
-
+pros::Motor arm(14); 
 
 // motorsssssssss
 
@@ -153,6 +154,44 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+
+// Define target angles for the arm
+const int ARM_ANGLE_ONE = 18;  // Replace with actual encoder value for position 1
+const int ARM_ANGLE_TWO = 120; // Replace with actual encoder value for position 2
+bool armTargetState = false;    // Tracks the current target state (false = angle 1, true = angle 2)
+const double ARM_KP = 0.5;      // Proportional gain for PID control
+const double ARM_KI = 0.0;      // Integral gain
+const double ARM_KD = 0.1;      // Derivative gain
+
+// PID control task for arm movement
+void arm_control_task() {
+    int targetAngle = ARM_ANGLE_ONE; // Start with the first angle
+    int lastError = 0;
+    double integral = 0;
+
+    while (true) {
+        // Read the current encoder value
+        int currentAngle = encoder.get_value();
+
+        // Calculate PID terms
+        int error = targetAngle - currentAngle;
+        integral += error;
+        double derivative = error - lastError;
+        double output = ARM_KP * error + ARM_KI * integral + ARM_KD * derivative;
+
+        // Apply the calculated power to the arm motor
+        arm.move_velocity(output);
+
+        // Print arm state to the brain screen
+        pros::lcd::print(6, "Target: %d, Current: %d", targetAngle, currentAngle);
+
+        // Save the error for the next loop
+        lastError = error;
+
+        // Delay to stabilize loop
+        pros::delay(20);
+    }
+}
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -173,6 +212,7 @@ pros::Distance distance (19);
 void autonomous() {
     // Motors and clamp initialization
     pros::Motor intake(2);
+    pros::Motor intake1(8);
     pros::adi::DigitalOut mogoClamp('A'); // Mogo clamp mechanism control
 
     chassis.setPose(0, 0, 0);
@@ -225,44 +265,20 @@ bool mogoState = false;               // Pneumatic clamp state
 bool autoClamped = false;             // Flag indicating if the clamp was automatically triggered
 int autoClampLastActivated = 0;       // Timestamp of the last auto-clamp action in milliseconds
 const int AUTO_CLAMP_COOLDOWN = 4000;  // Cooldown period in milliseconds
-pros::Motor arm(8); 
 
-
-
-// Define PID constants
-const double kP = 0.5;   // Proportional gain
-const double kI = 0.001; // Integral gain
-const double kD = 0.1;   // Derivative gain
-
-// Define target positions
-const int ARM_POSITION_1 = 120; // Replace with your desired encoder value
-const int ARM_POSITION_2 = 17; // Replace with your desired encoder value
-
-// PID controller variables
-double targetPosition = ARM_POSITION_1; // Initial target position
-double error = 0;
-double lastError = 0;
-double integral = 0;
-double derivative = 0;
-double output = 0;
-
-// Button toggle logic
-bool armButtonState = false;
-bool lastArmButtonState = false;
-bool xButtonState = false;
 
 
 void opcontrol() {
 
     
 
-    pros::Motor arm(8);
     pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
     // Set the arm motor to hold its position when stopped
     arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-
+    // Launch the arm control task
+    pros::Task armTask(arm_control_task);
 
 
     // loop forever
@@ -279,41 +295,24 @@ void opcontrol() {
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        static bool lastL2State = false; // Tracks the previous state of the L2 button
+        bool currentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
 
-
-          // Toggle target position with L1 button
-        armButtonState = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-        if (armButtonState && !lastArmButtonState) {
-            // Toggle between positions
-            targetPosition = (targetPosition == ARM_POSITION_1) ? ARM_POSITION_2 : ARM_POSITION_1;
-        }
-        lastArmButtonState = armButtonState;
-
-        // Move to zero position with X button
-        xButtonState = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
-        if (xButtonState) {
-            targetPosition = 0; // Override target position to zero
+        if (currentL2State && !lastL2State) {
+            armTargetState = !armTargetState; // Toggle the state
         }
 
-        // PID control for the arm
-        int currentPosition = encoder.get_value(); // Read the encoder
-        error = targetPosition - currentPosition;     // Calculate error
-        integral += error;                            // Update integral
-        derivative = error - lastError;               // Calculate derivative
-        output = (kP * error) + (kI * integral) + (kD * derivative); // PID formula
-        lastError = error;                            // Update last error
-
-        // Limit output to prevent excessive speed
-        output = std::clamp(output, -127.0, 127.0);
-
-        // Set motor power
-        arm.move_voltage(output * 120); // Convert to millivolts for PROS
-
-        // Optional: Reset integral if the error is negligible to avoid windup
-        if (std::abs(error) < 10) {
-            integral = 0;
+        // Update target angle based on the toggle state
+        if (armTargetState) {
+            armTask.suspend(); // Prevent race condition
+            armTask.resume();  // Resume task with updated target
+        } else {
+            armTask.suspend();
+            armTask.resume();
         }
 
+        // Update last state for edge detection
+        lastL2State = currentL2State;
 
         ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -324,10 +323,13 @@ void opcontrol() {
         // Intake control block (hold)
         if (controller.get_digital(DIGITAL_R1)) {
             intake.move_velocity(600);
+            intake1.move_velocity(600);
         } else if (controller.get_digital(DIGITAL_R2)) {
             intake.move_velocity(-600);
+            intake1.move_velocity(-600);
         } else {
             intake.move_velocity(0);
+            intake1.move_velocity(0);
         }
 
         //////////////////////////////////////////////////////////////////////////
