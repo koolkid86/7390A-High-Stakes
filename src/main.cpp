@@ -69,6 +69,10 @@ lemlib::ControllerSettings angular_controller(4, // proportional gain (kP)
                                               80 // maximum acceleration (slew)
 );
 
+
+
+
+
 // input curve for throttle input during driver control
 lemlib::ExpoDriveCurve
     throttle_curve(3,   // joystick deadband out of 127
@@ -149,43 +153,8 @@ void disabled() {}
 void competition_initialize() {}
 
 
-// Define target angles for the arm
-const int ARM_ANGLE_ONE = 18;  // Replace with actual encoder value for position 1
-const int ARM_ANGLE_TWO = 120; // Replace with actual encoder value for position 2
-bool armTargetState = false;    // Tracks the current target state (false = angle 1, true = angle 2)
-const double ARM_KP = 0.5;      // Proportional gain for PID control
-const double ARM_KI = 0.0;      // Integral gain
-const double ARM_KD = 0.1;      // Derivative gain
+   // Derivative gain
 
-// PID control task for arm movement
-void arm_control_task() {
-    int targetAngle = ARM_ANGLE_ONE; // Start with the first angle
-    int lastError = 0;
-    double integral = 0;
-
-    while (true) {
-        // Read the current encoder value
-        int currentAngle = encoder.get_value();
-
-        // Calculate PID terms
-        int error = targetAngle - currentAngle;
-        integral += error;
-        double derivative = error - lastError;
-        double output = ARM_KP * error + ARM_KI * integral + ARM_KD * derivative;
-
-        // Apply the calculated power to the arm motor
-        arm.move_velocity(output);
-
-        // Print arm state to the brain screen
-        pros::lcd::print(6, "Target: %d, Current: %d", targetAngle, currentAngle);
-
-        // Save the error for the next loop
-        lastError = error;
-
-        // Delay to stabilize loop
-        pros::delay(20);
-    }
-}
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -267,114 +236,134 @@ const int AUTO_CLAMP_COOLDOWN = 4000;  // Cooldown period in milliseconds
 
 
 void opcontrol() {
-
-    
-
     pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
     // Set the arm motor to hold its position when stopped
     arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-    // Launch the arm control task
-    pros::Task armTask(arm_control_task);
 
+    // Define target angles for the arm
+    const int ARM_ANGLE_ONE = 120;  // Replace with actual encoder value for position 1
+    const double ARM_ANGLE_TWO = 15.5; // Replace with actual encoder value for position 2
 
-    // loop forever
+    // PID constants for arm control
+    const double ARM_KP = 5;       // Proportional gain
+    const double ARM_KI = 0.0;       // Integral gain
+    const double ARM_KD = 5;       // Derivative gain
+
+    // Variables for arm control
+    int targetAngle = 0;             // Target position for the arm
+    int lastError = 0;               // Previous error for PID calculation
+    double integral = 0;             // Integral term for PID
+    static bool armTargetState = false; // Arm toggle state (starts at 0)
+
+    // Arm lock state
+    bool armLockedAtZero = true;     // Tracks if arm is locked at angle 0
+
+    // Variables for mogo clamp control
+    bool currentButtonState = false; // Tracks the current state of the L1 button
+    bool lastButtonState = false;    // Tracks the previous state of the L1 button
+    bool manualOverride = false;     // Manual override state for mogo clamp
+    bool mogoState = false;          // Current clamp state (open/closed)
+    bool autoClamped = false;        // Tracks if the auto-clamp is engaged
+    int autoClampLastActivated = 0;  // Last activation time of auto-clamp
+
+    // Auto-clamp settings
+    const int AUTO_CLAMP_COOLDOWN = 5000; // Cooldown period for auto-clamp (ms)
+    const double DISTANCE_THRESHOLD = 30; // Distance threshold for auto-clamp (mm)
+
+    // Main control loop
     while (true) {
-        // Get left Y and right X positions for arcade drive
+        //////////////////////////////// CHASSIS CONTROL ////////////////////////////////
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-
-        // Move the robot using arcade drive
         chassis.arcade(leftY, rightX);
 
-   
-
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////
-
+        //////////////////////////////// ARM CONTROL (TOGGLE + PID) ////////////////////////////////
         static bool lastL2State = false; // Tracks the previous state of the L2 button
         bool currentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
 
+        // Reset arm lock state and toggle target when L2 is pressed
         if (currentL2State && !lastL2State) {
-            armTargetState = !armTargetState; // Toggle the state
+            armTargetState = !armTargetState;  // Toggle arm state
+            armLockedAtZero = false;          // Unlock arm from angle 0
         }
+        lastL2State = currentL2State;         // Update the last state
 
-        // Update target angle based on the toggle state
-        if (armTargetState) {
-            armTask.suspend(); // Prevent race condition
-            armTask.resume();  // Resume task with updated target
+        // Set target angle based on toggle state or lock state
+        if (armLockedAtZero) {
+            targetAngle = 0;                  // Lock arm at angle 0
         } else {
-            armTask.suspend();
-            armTask.resume();
+            targetAngle = armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE;
         }
 
-        // Update last state for edge detection
-        lastL2State = currentL2State;
+        // Check if button A is pressed to reset and lock arm at angle 0
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+            targetAngle = 0;                  // Set target to 0
+            armLockedAtZero = true;           // Lock arm at angle 0
+        }
 
-        ///////////////////////////////////////////////////////////////////////////////////////////
+        // PID control for precise arm movement
+        int currentAngle = encoder.get_value(); // Get the current arm position
+        int error = targetAngle - currentAngle; // Calculate error
+        integral += error;                      // Accumulate integral
+        double derivative = error - lastError;  // Calculate derivative
+        double output = ARM_KP * error + ARM_KI * integral + ARM_KD * derivative;
+        arm.move_velocity(output);              // Move arm using PID output
+        lastError = error;                      // Save error for next iteration
 
+        // Print arm state to the LCD screen for debugging
+        pros::lcd::print(6, "Target: %d, Current: %d", targetAngle, currentAngle);
 
-
-
-
-        // Intake control block (hold)
-        if (controller.get_digital(DIGITAL_R1)) {
-            intake.move_velocity(600);
+        //////////////////////////////// INTAKE CONTROL ////////////////////////////////
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+            intake.move_velocity(600);         // Intake forward
             intake1.move_velocity(600);
-        } else if (controller.get_digital(DIGITAL_R2)) {
-            intake.move_velocity(-600);
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+            intake.move_velocity(-600);        // Intake reverse
             intake1.move_velocity(-600);
         } else {
-            intake.move_velocity(0);
+            intake.move_velocity(0);           // Stop intake
             intake1.move_velocity(0);
         }
 
-        //////////////////////////////////////////////////////////////////////////
-        // Get the current state of the L1 button
-        currentButtonState = controller.get_digital(DIGITAL_L1);
+        //////////////////////////////// MOGO CLAMP CONTROL ////////////////////////////////
+        currentButtonState = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
 
-        // Check if the L1 button was just pressed (edge detection)
+        // Manual toggle of mogo clamp
         if (currentButtonState && !lastButtonState) {
-            manualOverride = true;            // Enable manual override
-            mogoState = !mogoState;           // Toggle the clamp state manually
-            mogo.set_value(mogoState);        // Apply the manual state to the clamp
+            manualOverride = true;             // Enable manual override
+            mogoState = !mogoState;            // Toggle clamp state
+            mogo.set_value(mogoState);         // Apply the toggle state
 
             if (!mogoState) {
-                autoClamped = false;          // Reset auto-clamp flag if manually unclamped
+                autoClamped = false;           // Reset auto-clamp flag if manually unclamped
                 manualOverride = false;
             }
         }
 
-        // Auto-clamp logic (only active if manual override is not engaged)
-        int currentTime = pros::millis();     // Get the current time in milliseconds
+        // Auto-clamp logic (if manual override is not engaged)
+        int currentTime = pros::millis();
         if (!manualOverride && (currentTime - autoClampLastActivated >= AUTO_CLAMP_COOLDOWN)) {
-            double distanceValue = distance.get();  // Get the distance from the sensor
+            double distanceValue = distance.get(); // Get distance sensor value
 
-            // Trigger auto-clamping if the robot is close enough to an object
+            // Trigger auto-clamping if object is detected within threshold
             if (distanceValue < DISTANCE_THRESHOLD && !autoClamped) {
-                mogoState = true;             // Close the clamp automatically
+                mogoState = true;             // Close clamp
                 mogo.set_value(mogoState);    // Activate pneumatic clamp
-                autoClamped = true;           // Mark auto-clamp as triggered
-                controller.rumble("--");       // Provide haptic feedback
-                autoClampLastActivated = currentTime; // Record the time of this action
+                autoClamped = true;           // Mark auto-clamp as active
+                controller.rumble("--");      // Haptic feedback
+                autoClampLastActivated = currentTime; // Record activation time
             }
         }
+        lastButtonState = currentButtonState; // Update last button state
 
-         
-
-        // Update the last button state for the next loop iteration
-        lastButtonState = currentButtonState;
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
-    
-
-
-
-    pros::delay(25);  // Delay for stability
+        //////////////////////////////// LOOP DELAY ////////////////////////////////
+        pros::delay(25); // Delay to prevent overloading cpu resources
 }
+
 }
+
 
 
 
