@@ -181,7 +181,33 @@ void autonomous() {
     chassis.setPose(0, 0, 0);
 
    
-    chassis.moveToPoint(0, -45, 2500,    {.forwards = false, .maxSpeed=75, }, true);
+  /*  chassis.moveToPoint(0, -40, 2500,    {.forwards = false, .maxSpeed=80, }, true);
+    while(chassis.isInMotion() && distance.get() > 32){ 
+        pros::delay(10); // save cpu resources
+    }
+     // cancel the motion once the robot detects mogo is in the bot and clamped
+     //pros::delay(100); // wait for mogo to clamp and settle
+    mogoClamp.set_value(true);
+
+    pros::delay(350);
+    chassis.cancelMotion();
+
+
+    //pros::delay(200); // wait for mogo to clamp and settle
+
+    //chassis.moveToPoint(9.4, -32.36,  3000, {.maxSpeed=90}, true);
+    intake.move_velocity(600);
+    intake1.move_velocity(600);
+
+    chassis.moveToPoint(10, -33, 1000, {}, true);
+    
+    chassis.moveToPose(26.75, -50.7, 180, 1500, {}, false);
+    pros::delay(1000);
+    chassis.moveToPoint(20.75, -49.7, 1500, {}, false);
+    //pros::delay(2000);
+    chassis.moveToPoint(0, 0, 4000); */
+
+     chassis.moveToPoint(0, -45, 2500,    {.forwards = false, .maxSpeed=75, }, true);
     while(chassis.isInMotion() && distance.get() > 32){ 
         pros::delay(10); // save cpu resources
     }
@@ -196,9 +222,8 @@ void autonomous() {
     intake.move_velocity(600);
     chassis.moveToPoint(18, -37, 1000);
     chassis.moveToPoint(25, -52, 1000);
-    chassis.turnToHeading(270, 2000);
+    chassis.turnToHeading(270, 2000); 
     chassis.moveToPoint(28, -60, 1000);
-
 
    
 }
