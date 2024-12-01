@@ -117,7 +117,7 @@ void initialize() {
   pros::lcd::initialize();
   chassis.calibrate();
   pros::lcd::register_btn1_cb(on_center_button);
-
+  chassis.setPose(0, 0, 0);
   encoder.reset(); 
 
 
@@ -178,10 +178,10 @@ void autonomous() {
     pros::Motor intake1(8);
     pros::adi::DigitalOut mogoClamp('A'); // Mogo clamp mechanism control
 
-    chassis.setPose(0, 0, 0);
-
+  
    
-  /*  chassis.moveToPoint(0, -40, 2500,    {.forwards = false, .maxSpeed=80, }, true);
+   
+    chassis.moveToPoint(0, -41.5,  2500,    {.forwards = false, .maxSpeed=80, }, true);
     while(chassis.isInMotion() && distance.get() > 32){ 
         pros::delay(10); // save cpu resources
     }
@@ -189,7 +189,7 @@ void autonomous() {
      //pros::delay(100); // wait for mogo to clamp and settle
     mogoClamp.set_value(true);
 
-    pros::delay(350);
+    pros::delay(250);
     chassis.cancelMotion();
 
 
@@ -199,31 +199,20 @@ void autonomous() {
     intake.move_velocity(600);
     intake1.move_velocity(600);
 
-    chassis.moveToPoint(10, -33, 1000, {}, true);
+    chassis.moveToPoint(18.7, -30.6, 1000, {.maxSpeed = 80}, false);
+
+   
     
-    chassis.moveToPose(26.75, -50.7, 180, 1500, {}, false);
+    
+    chassis.moveToPose(23.75, -50.7, 180, 1500, {.maxSpeed = 100}, false);
     pros::delay(1000);
-    chassis.moveToPoint(20.75, -49.7, 1500, {}, false);
-    //pros::delay(2000);
-    chassis.moveToPoint(0, 0, 4000); */
-//
-     chassis.moveToPoint(0, -45, 2500,    {.forwards = false, .maxSpeed=75, }, true);
-    while(chassis.isInMotion() && distance.get() > 32){ 
-        pros::delay(10); // save cpu resources
-    }
-    chassis.cancelMotion(); // cancel the motion once the robot detects mogo is in the bot and clamped
-     pros::delay(100); // wait for mogo to clamp and settle
-    mogoClamp.set_value(true);
+    chassis.turnToHeading(200, 1000);
+    chassis.moveToPoint(26.75, -40, 1500, {.forwards = false}, false);
 
+   
+    
+    //chassis.moveToPoint(0, 0, 4000); 
 
-    //pros::delay(200); // wait for mogo to clamp and settle
-
-    //chassis.moveToPoint(9.4, -32.36,  3000, {.maxSpeed=90}, true);
-    intake.move_velocity(600);
-    chassis.moveToPoint(18, -37, 1000);
-    chassis.moveToPoint(25, -52, 1000);
-    chassis.turnToHeading(270, 2000); 
-    chassis.moveToPoint(28, -60, 1000);
 
    
 }
