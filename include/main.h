@@ -24,6 +24,7 @@
  * E_CONTROLLER_MASTER is pedantically correct within the PROS styleguide, but
  * not convenient for most student programmers.
  */
+#include "pros/adi.hpp"
 #define PROS_USE_SIMPLE_NAMES
 
 /**
@@ -35,11 +36,12 @@
 #define PROS_USE_LITERALS
 
 #include "api.h"
+#include "lemlib/api.hpp"
 
 /**
  * You should add more #includes here
  */
-//#include "okapi/api.hpp"
+// #include "okapi/api.hpp"
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
@@ -52,6 +54,35 @@
 // using namespace pros;
 // using namespace pros::literals;
 // using namespace okapi;
+
+// MOTORS
+extern pros::Motor arm;
+extern pros::Motor intake1;
+extern pros::Motor intake2;
+
+// PNUEMATICS
+extern pros::adi::DigitalOut mogoClamp;
+
+// SENSORS
+extern pros::Distance distance;
+extern pros::Imu imu;
+extern pros::adi::Encoder encoder;
+
+// DRIVE
+extern pros::MotorGroup left_motors;
+extern pros::MotorGroup right_motors;
+
+extern lemlib::Drivetrain drivetrain;
+
+extern lemlib::OdomSensors sensors;
+
+extern lemlib::ControllerSettings lateral_controller;
+extern lemlib::ControllerSettings angular_controller;
+
+extern lemlib::ExpoDriveCurve throttle_curve;
+extern lemlib::ExpoDriveCurve steer_curve;
+
+extern lemlib::Chassis chassis;
 
 /**
  * Prototypes for the competition control tasks are redefined here to ensure
@@ -74,7 +105,7 @@ void opcontrol(void);
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
+// #include <iostream>
 #endif
 
-#endif  // _PROS_MAIN_H_
+#endif // _PROS_MAIN_H_
