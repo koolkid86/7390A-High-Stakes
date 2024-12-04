@@ -132,15 +132,15 @@ void opcontrol() {
 
     // Set target angle based on toggle state or lock state
     if (armLockedAtZero) {
-      setArmPosition(0); // Lock arm at angle 0
+      setArmPosition(1.5); // Lock arm at safe low position
     } else {
       setArmPosition(armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE);
     }
 
-    // Check if button A is pressed to reset and lock arm at angle 0
+    // Check if button A is pressed to reset and lock arm at a safe position
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-      setArmPosition(0);        // Set target to 0
-      armLockedAtZero = true; // Lock arm at angle 0
+      setArmPosition(1.5);        // Set target to 1.5 degrees to avoid hardstop
+      armLockedAtZero = true;    // Lock arm at low position
     }
 
     //////////////////////// INTAKE CONTROL //////////////////////////////
