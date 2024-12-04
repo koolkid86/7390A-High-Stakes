@@ -1,6 +1,7 @@
 #include "lemlib/api.hpp"
 #include "main.h"
 #include "pros/rtos.hpp"
+#include "arm_control.hpp"
 
 void match() {
   chassis.moveToPoint(0, -41.5, 2500,
@@ -38,29 +39,11 @@ void match() {
 }
 
 void skills() {
-  const double ARM_KP = 5;   // Proportional gain
-  const double ARM_KI = 0.0; // Integral gain
-  const double ARM_KD = 5;   // Derivative gain
-
-  // Variables for arm control
-  int targetAngle = 130;              // Target position for the arm
-  int lastError = 0;                  // Previous error for PID calculation
-  double integral = 0;                // Integral term for PID
-  static bool armTargetState = false; // Arm toggle state (starts at 0)
-
-  // PID control for precise arm movement
-  int currentAngle = encoder.get_value(); // Get the current arm position
-  int error = targetAngle - currentAngle; // Calculate error
-  integral += error;                      // Accumulate integral
-  double derivative = error - lastError;  // Calculate derivative
-  double output = ARM_KP * error + ARM_KI * integral + ARM_KD * derivative;
-  lastError = error; // Save error for next iteration
-
-  arm.move_velocity(output); // Move arm using PID output
+  // Set initial arm position
+  setArmPosition(130);
   pros::delay(750);
-  arm.move_velocity(-output); // Move arm using PID output
+  setArmPosition(0);
   pros::delay(750);
-  arm.move_velocity(0); // Move arm using PID output
 
   // Move to goal
 
@@ -116,7 +99,7 @@ std::string autonNames[2] = {"Match", "Skills"};
 
 void previousAuton() {
   if (autonSelect == 0) {
-    autonSelect = autonNames->length() - 1;
+    autonSelect = sizeof(autonNames) / sizeof(autonNames[0]) - 1;
   } else {
     autonSelect--;
   }
@@ -124,7 +107,7 @@ void previousAuton() {
 }
 
 void nextAuton() {
-  if (autonSelect == autonNames->length() - 1) {
+  if (autonSelect == sizeof(autonNames) / sizeof(autonNames[0]) - 1) {
     autonSelect = 0;
   } else {
     autonSelect++;

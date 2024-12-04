@@ -2,6 +2,7 @@
 #include "auton.hpp"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include <string>
+#include "arm_control.hpp"
 
 #define ts std::to_string
 
@@ -16,6 +17,9 @@ void initialize() {
   chassis.calibrate();
   chassis.setPose(0, 0, 0);
   encoder.reset();
+
+  // Start the arm control task
+  startArmTask();
 
   pros::lcd::set_text(0, "Auton Selected = " + autonNames[autonSelect]);
 
@@ -87,23 +91,11 @@ void opcontrol() {
   arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
   // Define target angles for the arm
-  const int ARM_ANGLE_ONE =
-      120; // Replace with actual encoder value for position 1
-  const double ARM_ANGLE_TWO =
-      15.5; // Replace with actual encoder value for position 2
-
-  // PID constants for arm control
-  const double ARM_KP = 5;   // Proportional gain
-  const double ARM_KI = 0.0; // Integral gain
-  const double ARM_KD = 5;   // Derivative gain
+  const int ARM_ANGLE_ONE = 120; // Replace with actual encoder value for position 1
+  const double ARM_ANGLE_TWO = 15.5; // Replace with actual encoder value for position 2
 
   // Variables for arm control
-  int targetAngle = 0;                // Target position for the arm
-  int lastError = 0;                  // Previous error for PID calculation
-  double integral = 0;                // Integral term for PID
   static bool armTargetState = false; // Arm toggle state (starts at 0)
-
-  // Arm lock state
   bool armLockedAtZero = true; // Tracks if arm is locked at angle 0
 
   // Variables for mogo clamp control
@@ -126,7 +118,7 @@ void opcontrol() {
     int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
     chassis.arcade(leftY, rightX);
 
-    ///////////////// ARM CONTROL (TOGGLE + PID) /////////////////////////////
+    ///////////////// ARM CONTROL (TOGGLE) /////////////////////////////
     static bool lastL2State =
         false; // Tracks the previous state of the L2 button
     bool currentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
@@ -140,28 +132,16 @@ void opcontrol() {
 
     // Set target angle based on toggle state or lock state
     if (armLockedAtZero) {
-      targetAngle = 0; // Lock arm at angle 0
+      setArmPosition(0); // Lock arm at angle 0
     } else {
-      targetAngle = armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE;
+      setArmPosition(armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE);
     }
 
     // Check if button A is pressed to reset and lock arm at angle 0
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-      targetAngle = 0;        // Set target to 0
+      setArmPosition(0);        // Set target to 0
       armLockedAtZero = true; // Lock arm at angle 0
     }
-
-    // PID control for precise arm movement
-    int currentAngle = encoder.get_value(); // Get the current arm position
-    int error = targetAngle - currentAngle; // Calculate error
-    integral += error;                      // Accumulate integral
-    double derivative = error - lastError;  // Calculate derivative
-    double output = ARM_KP * error + ARM_KI * integral + ARM_KD * derivative;
-    arm.move_velocity(output); // Move arm using PID output
-    lastError = error;         // Save error for next iteration
-
-    // Print arm state to the LCD screen for debugging
-    pros::lcd::print(6, "Target: %d, Current: %d", targetAngle, currentAngle);
 
     //////////////////////// INTAKE CONTROL //////////////////////////////
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
