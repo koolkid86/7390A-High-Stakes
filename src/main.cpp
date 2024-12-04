@@ -3,6 +3,7 @@
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include <string>
 #include "arm_control.hpp"
+#include "vision_control.hpp"
 
 #define ts std::to_string
 
@@ -18,8 +19,9 @@ void initialize() {
   chassis.setPose(0, 0, 0);
   encoder.reset();
 
-  // Start the arm control task
+  // Start the arm and vision control tasks
   startArmTask();
+  startVisionTask();
 
   pros::lcd::set_text(0, "Auton Selected = " + autonNames[autonSelect]);
 
@@ -145,8 +147,15 @@ void opcontrol() {
 
     //////////////////////// INTAKE CONTROL //////////////////////////////
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-      intake1.move_velocity(600); // Intake forward
-      intake2.move_velocity(600);
+      // Only run intake if vision sensor hasn't detected a red ring
+      if (!shouldStopIntake()) {
+        intake1.move_velocity(600); // Intake forward
+        intake2.move_velocity(600);
+      } else {
+        intake1.move_velocity(0);   // Stop intake
+        intake2.move_velocity(0);
+        pros::lcd::print(7, "Intake stopped by vision");
+      }
     } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
       intake1.move_velocity(-600); // Intake reverse
       intake2.move_velocity(-600);

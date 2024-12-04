@@ -1,6 +1,7 @@
 #include "arm_control.hpp"
 #include "main.h"
 #include "pros/rtos.hpp"
+#include <cmath>
 
 // Global variables for arm control
 static int g_targetAngle = 0;
@@ -12,15 +13,26 @@ void setArmPosition(int targetDegrees) {
     g_targetAngle = targetDegrees;
 }
 
+// Slew rate control function
+double slewRate(double current, double target, double rate) {
+    double change = target - current;
+    if (std::abs(change) > rate) {
+        return current + (change > 0 ? rate : -rate);
+    }
+    return target;
+}
+
 // The main arm control task
 void armControlTask(void*) {
     // Variables for PID control
     int lastError = 0;
     double integral = 0;
-    const double INTEGRAL_LIMIT = 1000.0;  // Increased integral limit
-    const int ERROR_THRESHOLD = 3;         // Tighter dead zone
-    const double MAX_OUTPUT = 600.0;       // Increased max output for more power
-    const int INTEGRAL_THRESHOLD = 15;     // Only integrate when error is small
+    double lastOutput = 0;
+    const double INTEGRAL_LIMIT = 2000.0;  // Increased for smoother integration
+    const int ERROR_THRESHOLD = 2;         // Tighter dead zone for more precision
+    const double MAX_OUTPUT = 600.0;       // Maximum output
+    const int INTEGRAL_THRESHOLD = 20;     // Increased integration window
+    const double SLEW_RATE = 15.0;        // Maximum change in output per iteration
     
     // Set the arm motor to hold its position when stopped
     arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -30,11 +42,11 @@ void armControlTask(void*) {
         int currentAngle = encoder.get_value();
         int error = g_targetAngle - currentAngle;
         
-        // Only accumulate integral when close to target
+        // Smooth integral accumulation
         if (abs(error) < INTEGRAL_THRESHOLD) {
-            integral += error;
+            integral = integral * 0.95 + error; // Decay factor on integral
         } else {
-            integral = 0; // Reset integral when error is large
+            integral *= 0.5; // Rapidly decay integral when error is large
         }
         
         // Limit integral to prevent windup
@@ -44,34 +56,44 @@ void armControlTask(void*) {
             integral = -INTEGRAL_LIMIT;
         }
         
-        // Calculate derivative (rate of change of error)
-        double derivative = error - lastError;
+        // Calculate derivative with additional smoothing
+        double derivative = (error - lastError) * 0.7; // Add derivative smoothing
         
         // Calculate PID output with improved scaling
         double output = (ARM_KP * error) + (ARM_KI * integral) + (ARM_KD * derivative);
         
-        // Apply exponential scaling for smoother control
-        output = (output > 0) ? 
-                std::min(output * output / 100.0, MAX_OUTPUT) : 
-                std::max(-output * output / 100.0, -MAX_OUTPUT);
+        // Apply smooth acceleration curve
+        double scale = std::min(1.0, std::abs(error) / 50.0); // Gradual scaling based on error
+        output *= scale;
         
-        // Dead zone - if error is very small, maintain holding power
+        // Apply slew rate limiting for smooth acceleration/deceleration
+        output = slewRate(lastOutput, output, SLEW_RATE);
+        
+        // Limit maximum output
+        if (output > MAX_OUTPUT) {
+            output = MAX_OUTPUT;
+        } else if (output < -MAX_OUTPUT) {
+            output = -MAX_OUTPUT;
+        }
+        
+        // Dead zone with smooth transition
         if (abs(error) < ERROR_THRESHOLD) {
-            output = 0;  // Let the motor brake mode handle holding
+            output *= std::max(0.0, (abs(error) - 1.0) / 1.0); // Adjusted smooth transition for tighter threshold
         }
         
         // Move arm using PID output
         arm.move_velocity(output);
         
-        // Save error for next iteration
+        // Save values for next iteration
         lastError = error;
+        lastOutput = output;
 
         // Print debug info to LCD
         pros::lcd::print(6, "T:%d C:%d E:%d I:%.1f O:%.1f", 
             g_targetAngle, currentAngle, error, integral, output);
 
         // Delay to prevent CPU hogging
-        pros::delay(10);  // Faster update rate for more responsive control
+        pros::delay(10);  // Keep fast update rate for smooth control
     }
 }
 
