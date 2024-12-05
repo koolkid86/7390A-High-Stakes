@@ -10,9 +10,7 @@
 pros::vision_signature_s_t REDBOX = pros::Vision::signature_from_utility(3, 6403, 10109, 8256, -1377, -381, -880, 2.400, 0);
 pros::vision_signature_s_t BLUEBOX = pros::Vision::signature_from_utility(1, -4505, -3449, -3978, 3969, 6799, 5384, 2.500, 0);
 
-// External motor declarations
-extern pros::Motor intake1;
-extern pros::Motor intake2;
+// MOTORS
 
 // Global variables
 static bool g_visionTaskRunning = false;
@@ -27,6 +25,9 @@ const int ARM_LIFT_ANGLE = 90;          // Increased angle for more aggressive l
 const int ARM_REST_ANGLE = 1.5;         // Rest position for arm
 const int COOLDOWN_TIME = 1000;         // Time before allowing next detection
 const int32_t RED_LED_COLOR = 0xFF0000; // Red color for LED
+const int MIN_OBJECT_WIDTH = 20;        // Minimum width for object detection
+const int VISION_CENTER_X = 160;        // Center x-coordinate of vision sensor
+const int CENTER_TOLERANCE = 20;        // Tolerance for object centering
 
 // Global flags for control
 volatile bool g_stopIntake = false;  // Made volatile for cross-task access
@@ -47,54 +48,55 @@ void visionControlTask(void*) {
         // Only check for rings if we're not in cooldown
         if (currentTime - g_lastDetectionTime > COOLDOWN_TIME) {
             // Get the largest red object (signature 3)
-            pros::vision_object_s_t redRing = vision_sensor->get_by_sig(0, 3);
+            pros::vision_object_s_t redObject = vision_sensor->get_by_sig(0, REDBOX.id);
+            
+            // Print basic object info
+            pros::lcd::print(3, "Obj: %d,%d w:%d", 
+                redObject.x_middle_coord, 
+                redObject.y_middle_coord,
+                redObject.width);
+            
+            // Print detection criteria
+            pros::lcd::print(4, "Sig:%d Min:%d Ctr:%d", 
+                redObject.signature == REDBOX.id,
+                redObject.width > MIN_OBJECT_WIDTH,
+                abs(redObject.x_middle_coord - VISION_CENTER_X) < CENTER_TOLERANCE);
 
-            // Check if we detected a valid red ring
-            if (redRing.signature == 3 && 
-                redRing.width > DETECTION_THRESHOLD && redRing.height > DETECTION_THRESHOLD) {
+            // Check if a red ring is detected and centered
+            if (redObject.signature == REDBOX.id && 
+                redObject.width > MIN_OBJECT_WIDTH &&
+                abs(redObject.x_middle_coord - VISION_CENTER_X) < CENTER_TOLERANCE) {
                 
-                g_lastDetectionTime = currentTime;
-                
-                // Debug print
-                pros::lcd::print(4, "Ring detected! W:%d H:%d", redRing.width, redRing.height);
-                
-                // Flash LED red and stop intake immediately
                 vision_sensor->set_led(RED_LED_COLOR);
-                g_stopIntake = true;
+                pros::lcd::print(5, "DETECTED - Stop:%d", g_stopIntake);
                 
-                // Force immediate intake stop
-                intake1.move_velocity(0);
-                intake2.move_velocity(0);
-                intake1.brake();
-                intake2.brake();
-                
-                pros::lcd::print(5, "Stopping intake...");
-                
-                // Lift arm aggressively
-                pros::lcd::print(6, "Lifting arm to %d", ARM_LIFT_ANGLE);
-                setArmPosition(ARM_LIFT_ANGLE);
-                
-                // Wait while arm is lifted
-                pros::delay(ARM_LIFT_TIME);
-                
-                // Return arm to rest position
-                pros::lcd::print(6, "Lowering arm to %d", ARM_REST_ANGLE);
-                setArmPosition(ARM_REST_ANGLE);
-                
-                // Keep intake stopped for a bit longer
-                pros::delay(INTAKE_STOP_TIME - ARM_LIFT_TIME);
-                
-                // Resume intake
-                g_stopIntake = false;
-                pros::lcd::print(5, "Resuming intake");
-                
-                // Clear LED
+                if (!g_stopIntake) {
+                    g_stopIntake = true;
+                    
+                    // Debug state transitions
+                    pros::lcd::print(6, "ARM UP");
+                    setArmPosition(ARM_LIFT_ANGLE);
+                    pros::delay(ARM_LIFT_TIME);
+                    
+                    pros::lcd::print(6, "ARM DOWN");
+                    setArmPosition(ARM_REST_ANGLE);
+                    pros::delay(INTAKE_STOP_TIME - ARM_LIFT_TIME);
+                    
+                    g_stopIntake = false;
+                    vision_sensor->clear_led();
+                    pros::lcd::print(6, "COMPLETE");
+                }
+            } else {
                 vision_sensor->clear_led();
+                if (g_stopIntake) {
+                    g_stopIntake = false;
+                    pros::lcd::print(5, "NO DETECTION");
+                }
             }
         }
         
         // Very small delay to prevent CPU hogging but maintain responsiveness
-        pros::delay(5);
+        pros::delay(20);
     }
 
     // Cleanup

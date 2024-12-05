@@ -4,6 +4,7 @@
 #include "arm_control.hpp"
 
 void match() {
+  
   chassis.moveToPoint(0, -41.5, 2500,
                       {
                           .forwards = false,
@@ -38,7 +39,41 @@ void match() {
   // chassis.moveToPoint(0, 0, 4000);
 }
 
+void match_awp() {
+    chassis.setPose(0,0,0);
+
+    setArmPosition(130);
+    pros::delay(500);
+    setArmPosition(0);
+    
+    chassis.moveToPoint(16.13, -36.7, 2500, {.forwards = false, .maxSpeed = 70}, true );
+
+    while (chassis.isInMotion() && distance.get() > 32) {
+      pros::delay(10); // save cpu resources
+    }
+    // cancel the motion once the robot detects mogo is in the bot and clamped
+    // pros::delay(100); // wait for mogo to clamp and settle
+    mogoClamp.set_value(true);
+
+    pros::delay(250);
+    chassis.cancelMotion();
+
+
+    mogoClamp.set_value(true);
+    pros::delay(250);
+
+    chassis.turnToHeading(98.2, 1000, {.maxSpeed = 100, .minSpeed = 10}, false);
+    chassis.moveToPoint(33.5, -34.24, 2000, {.forwards = true, .maxSpeed = 100});
+
+    intake1.move_velocity(600);
+    intake2.move_velocity(600);
+    // AWP (Alliance Win Point) autonomous routine
+    // Add your AWP-specific autonomous code here
+}
+
 void skills() {
+
+  chassis.setPose(0,0,0);
   // Set initial arm position
   setArmPosition(130);
   pros::delay(750);
@@ -47,8 +82,10 @@ void skills() {
 
   // Move to goal
 
+
+  /**/
   chassis.moveToPose(19, -12.7, -90, 3000, {.forwards = false, .maxSpeed = 60},
-                     true);
+                     false);
 
   while (chassis.isInMotion() && distance.get() > 32) {
     pros::delay(10); // save cpu resources
@@ -92,10 +129,10 @@ void skills() {
   arm.move_absolute(3000, 80);
 }
 
-void (*autonFunctions[])() = {match, skills};
+void (*autonFunctions[])() = {match, match_awp, skills};
 
 int autonSelect = 1;
-std::string autonNames[2] = {"Match", "Skills"};
+std::string autonNames[3] = {"Match", "Match AWP", "Skills"};
 
 void previousAuton() {
   if (autonSelect == 0) {
