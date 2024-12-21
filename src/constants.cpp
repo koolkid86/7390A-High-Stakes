@@ -10,6 +10,7 @@ pros::Motor intake2(8);
 
 // PNEUMATICS
 pros::adi::DigitalOut mogoClamp('A');
+pros::adi::DigitalOut doinker('B'); // Doinker pneumatic on port B
 
 // SENSORS
 pros::Distance distance(19);

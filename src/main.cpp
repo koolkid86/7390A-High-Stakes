@@ -3,13 +3,13 @@
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include <string>
 #include "arm_control.hpp"
-#include "vision_control.hpp"
 #include <vector>
 #include <fstream>
 #include <sstream>
 
 #define ts std::to_string
 
+extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
 
 void initialize() {
     pros::lcd::initialize();
@@ -18,9 +18,8 @@ void initialize() {
     encoder.reset();
 
 
-    // Start the arm and vision control tasks
+    // Start the arm control task
     startArmTask();
-    startVisionTask();
 
     pros::lcd::set_text(0, "Auton Selected = " + autonNames[autonSelect]);
 
@@ -164,30 +163,23 @@ void opcontrol() {
 
             // Set target angle based on toggle state or lock state
             if (armLockedAtZero) {
-                setArmPosition(1.5); // Lock arm at safe low position
+                setArmPosition(1); // Lock arm at safe low position
             } else {
                 setArmPosition(armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE);
             }
 
             // Check if button A is pressed to reset and lock arm at a safe position
             if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-                setArmPosition(1.5);        // Set target to 1.5 degrees to avoid hardstop
+                setArmPosition(1);        // Set target to 1.5 degrees to avoid hardstop
                 armLockedAtZero = true;    // Lock arm at low position
             }
         }
 
         //////////////////////// INTAKE CONTROL //////////////////////////////
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            // Only run intake if vision sensor hasn't detected a red ring
-            if (!shouldStopIntake()) {
-                intake1.move_velocity(600); // Intake forward
-                intake2.move_velocity(600);
-            } else {
-                intake1.move_velocity(0);   // Stop intake
-                intake2.move_velocity(0);
-                pros::lcd::print(7, "Intake stopped by vision");
-            }
-        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+            intake1.move_velocity(600); // Intake forward
+            intake2.move_velocity(600);
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
             intake1.move_velocity(-600); // Intake reverse
             intake2.move_velocity(-600);
         } else {
@@ -226,6 +218,17 @@ void opcontrol() {
             }
         }
         lastL1State = currentL1State; // Update last button state
+
+        // Doinker control (toggle with L2)
+        static bool doinkerState = false;
+        static bool lastL2State = false;
+        bool currentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
+        
+        if (currentL2State && !lastL2State) {  // Button just pressed
+            doinkerState = !doinkerState;  // Toggle state
+            doinker.set_value(doinkerState);
+        }
+        lastL2State = currentL2State;
 
         //////////////////////////////// LOOP DELAY ////////////////////////////////
         pros::delay(20); // Delay to prevent overloading cpu resources
