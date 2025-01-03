@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <llemu.hpp>
 
 #define ts std::to_string
 
@@ -13,7 +14,7 @@ extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constan
 
 void initialize() {
     pros::lcd::initialize();
-    chassis.calibrate();
+    chassis.calibrate(); 
     chassis.setPose(0, 0, 0);
     encoder.reset();
 
