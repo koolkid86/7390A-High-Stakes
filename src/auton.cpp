@@ -1,50 +1,31 @@
 #include "lemlib/api.hpp"
 #include "main.h"
 #include "pros/rtos.hpp"
-#include "arm_control.hpp"
+#include "armcontrol.hpp"
 
-void match() {
-  
-  chassis.moveToPoint(0, -41.5, 2500,
-                      {
-                          .forwards = false,
-                          .maxSpeed = 80,
-                      },
-                      true);
+extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
+extern pros::adi::DigitalOut rushMech;
 
-  while (chassis.isInMotion() && distance.get() > 32) {
-    pros::delay(10); // save cpu resources
-  }
-  // cancel the motion once the robot detects mogo is in the bot and clamped
-  // pros::delay(100); // wait for mogo to clamp and settle
-  mogoClamp.set_value(true);
-
-  pros::delay(250);
-  chassis.cancelMotion();
-
-  //
-  // pros::delay(200); // wait for mogo to clamp and settle
-
-  // chassis.moveToPoint(9.4, -32.36,  3000, {.maxSpeed=90}, true);
-  intake1.move_velocity(600);
-  intake2.move_velocity(600);
-
-  chassis.moveToPoint(18.7, -30.6, 1000, {.maxSpeed = 80}, false);
-
-  chassis.moveToPose(23.75, -50.7, 180, 1500, {.maxSpeed = 100}, false);
+void redRingRush() {
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  rushMech.set_value(true);
+  chassis.moveToPoint(-17.9, 40,  2700, {.maxSpeed = 80},false);
   pros::delay(1000);
-  chassis.turnToHeading(200, 1000);
-  chassis.moveToPoint(26.75, -40, 1500, {.forwards = false}, false);
 
-  // chassis.moveToPoint(0, 0, 4000);
-}
+  chassis.moveToPoint(-11.9 - 7.5, 20, 2000, {.forwards = false}, false);
+
+  chassis.moveToPose(0, 0, 0, 5000);
+
+  
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
 void match_awp() {
     chassis.setPose(0,0,0);
 
-    setArmPosition(130);
+   // setArmPosition(130);
     pros::delay(500);
-    setArmPosition(0);
+   // setArmPosition(0);
     
     chassis.moveToPoint(16.13, -36.7, 2500, {.forwards = false, .maxSpeed = 70}, true );
 
@@ -129,10 +110,10 @@ void skills() {
   arm.move_absolute(3000, 80);
 }
 
-void (*autonFunctions[])() = {match, match_awp, skills};
+void (*autonFunctions[])() = {redRingRush, match_awp, skills};
 
 int autonSelect = 1;
-std::string autonNames[3] = {"Match", "Match AWP", "Skills"};
+std::string autonNames[3] = {"redRingRush", "Match AWP", "Skills"};
 
 void previousAuton() {
   if (autonSelect == 0) {

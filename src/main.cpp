@@ -2,25 +2,25 @@
 #include "auton.hpp"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include <string>
-#include "arm_control.hpp"
+#include "pros/misc.h"
 #include <vector>
 #include <fstream>
-#include <sstream>
+#include "armcontrol.hpp"
+#include "pros/rtos.hpp"
+
+
 
 #define ts std::to_string
 
 extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
+extern pros::adi::DigitalOut rushMech;
 //
 void initialize() {
     pros::lcd::initialize();
     chassis.calibrate(); 
     chassis.setPose(0, 0, 0);
     encoder.reset();
-
-
-    // Start the arm control task
-    startArmTask();
-
+    pros::delay(5000); //give time for imu to calibrate
     pros::lcd::set_text(0, "Auton Selected = " + autonNames[autonSelect]);
 
     pros::lcd::register_btn0_cb(previousAuton);
@@ -37,8 +37,14 @@ void initialize() {
                            chassis.getPose().theta);
             // Move encoder to line 2
             pros::lcd::print(2, "Enc:%d", encoder.get_value());
-            // Lines 3-7 now free for vision debugging
             pros::delay(20);
+        }
+    });
+
+     pros::Task liftControlTask([]{
+        while (true) {
+            liftControl();
+            pros::delay(10);
         }
     });
 }
@@ -125,61 +131,16 @@ void opcontrol() {
         chassis.arcade(leftY, rightX);
 
         ///////////////// ARM CONTROL /////////////////////////////
-        // Manual arm control with X and B
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X) || 
-            controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-            
-            if (!manualArmControl) {
-                // Entering manual control mode
-                manualArmControl = true;
-                g_targetAngle = encoder.get_value(); // Update target to current position
-            }
-            
-            // Move arm up with X, down with B
-            if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-                arm.move_velocity(MANUAL_ARM_SPEED);
-            } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-                arm.move_velocity(-MANUAL_ARM_SPEED);
-            }
-        } else if (manualArmControl) {
-            // Exiting manual control mode
-            manualArmControl = false;
-            g_targetAngle = encoder.get_value(); // Update PID target to current position
-            arm.move_velocity(0);
-        }
+         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)) {
+			nextState();
+		}
 
-        // Only process automatic arm movements if not in manual mode
-        if (!manualArmControl) {
-            static bool lastL2State =
-                false; // Tracks the previous state of the L2 button
-            bool currentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-
-            // Reset arm lock state and toggle target when L2 is pressed
-            if (currentL2State && !lastL2State) {
-                armTargetState = !armTargetState; // Toggle arm state
-                armLockedAtZero = false;          // Unlock arm from angle 0
-            }
-            lastL2State = currentL2State; // Update the last state
-
-            // Set target angle based on toggle state or lock state
-            if (armLockedAtZero) {
-                setArmPosition(1); // Lock arm at safe low position
-            } else {
-                setArmPosition(armTargetState ? ARM_ANGLE_TWO : ARM_ANGLE_ONE);
-            }
-
-            // Check if button A is pressed to reset and lock arm at a safe position
-            if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-                setArmPosition(1);        // Set target to 1.5 degrees to avoid hardstop
-                armLockedAtZero = true;    // Lock arm at low position
-            }
-        }
 
         //////////////////////// INTAKE CONTROL //////////////////////////////
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
             intake1.move_velocity(600); // Intake forward
             intake2.move_velocity(600);
-        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             intake1.move_velocity(-600); // Intake reverse
             intake2.move_velocity(-600);
         } else {
@@ -229,6 +190,17 @@ void opcontrol() {
             doinker.set_value(doinkerState);
         }
         lastL2State = currentL2State;
+
+         // rushMech control (toggle with B)
+        static bool dState = false;
+        static bool lL2State = false;
+        bool cL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
+        
+        if (cL2State && !lL2State) {  // Button just pressed
+            dState = !dState;  // Toggle state
+            rushMech.set_value(dState);
+        }
+        lL2State = cL2State;
 
         //////////////////////////////// LOOP DELAY ////////////////////////////////
         pros::delay(20); // Delay to prevent overloading cpu resources
