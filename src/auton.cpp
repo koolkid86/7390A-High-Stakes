@@ -64,7 +64,7 @@ void redRingRush() {
   
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
-void match_awp() {
+void redGoalRush() {
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
 
@@ -102,11 +102,26 @@ void match_awp() {
     // Add your AWP-specific autonomous code here
 }
 
+
+void blueRingRush(){
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);  
+
+}
+
+
+
+void blueGoalRush(){
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE); 
+
+}
+
+
+
+
+
+
 void skills() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-
-
-
 
 
   chassis.setPose(0,0,0);
@@ -165,10 +180,10 @@ void skills() {
   arm.move_absolute(3000, 80);
 }
 
-void (*autonFunctions[])() = {redRingRush, match_awp, skills};
+void (*autonFunctions[])() = {redRingRush, redGoalRush, blueRingRush, blueGoalRush, skills};
 
 int autonSelect = 1;
-std::string autonNames[3] = {"redRingRush", "Match AWP", "Skills"};
+std::string autonNames[5] = {"redRingRush", "redGoalRush", "blueRingRush", "blueGoalRush", "Skills"};
 
 void previousAuton() {
   if (autonSelect == 0) {
