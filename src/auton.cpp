@@ -9,13 +9,20 @@ extern pros::adi::DigitalOut rushMech;
 void redRingRush() {
   intake1.move_velocity(-600);
   intake2.move_velocity(-600);
+
+  //initial rush
   rushMech.set_value(true);
-  chassis.moveToPoint(-17.9, 40,  2700, {.maxSpeed = 80},false);
-  pros::delay(1000);
+  //chassis.moveToPoint(-17.9, 40,  2700, {.maxSpeed = 80},false);
+  chassis.moveToPoint(-7, 40.8,  2700, {.maxSpeed = 80},false);
+  pros::delay(300);
 
-  chassis.moveToPoint(-11.9 - 7.5, 20, 2000, {.forwards = false}, false);
+  //back up after rush into mogo
+  chassis.moveToPose(-0.7, 31.8, -75, 3000, {.forwards = false}, false);
+  intake1.move_velocity(0);
+  intake2.move_velocity(0);
 
-  chassis.moveToPose(0, 0, 0, 5000);
+  chassis.moveToPose(-0.7, 31.8, -75, 3000, {.forwards = false}, false);
+ 
 
   
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
