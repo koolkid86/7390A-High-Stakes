@@ -55,7 +55,7 @@ lemlib::ControllerSettings
                        0,  // small error range timeout, in milliseconds
                        0,  // large error range, in inches
                        0,  // large error range timeout, in milliseconds
-                       70  // maximum acceleration (slew)
+                       60  // maximum acceleration (slew)
     );
 
 // angular PID controller
@@ -68,7 +68,7 @@ lemlib::ControllerSettings
                        0,  // small error range timeout, in milliseconds
                        0,  // large error range, in inches
                        0,  // large error range timeout, in milliseconds
-                       80  // maximum acceleration (slew)
+                       60  // maximum acceleration (slew)
     );
 
 // input curve for throttle input during driver control
