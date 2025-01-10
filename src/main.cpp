@@ -100,6 +100,7 @@ void opcontrol() {
     // Set the arm motor to hold its position when stopped
     arm.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
     // Define target angles for the arm
     const int ARM_ANGLE_ONE = 120; // Replace with actual encoder value for position 1
     const double ARM_ANGLE_TWO = 15.5; // Replace with actual encoder value for position 2

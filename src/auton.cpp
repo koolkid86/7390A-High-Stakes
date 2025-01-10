@@ -7,6 +7,7 @@ extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constan
 extern pros::adi::DigitalOut rushMech;
 
 void redRingRush() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
   setArmPosition(70);
   intake1.move_velocity(-600);
@@ -47,18 +48,29 @@ void redRingRush() {
   //mogoClamp.set_value(true);
 
   //go pick up 2 rings after clamping mogo
-  chassis.moveToPoint(2.2, 31.4, 1000, {}, false);
-  chassis.moveToPoint(-8.6, 30.4, 1000, {}, false);
- 
+  chassis.moveToPoint(2.2, 31.4, 1000, {.maxSpeed = 60}, false);
+  chassis.moveToPoint(-12, 28.4, 1000, {.maxSpeed = 60}, false);
+  pros::delay(100);
+
+  intake2.move_velocity(-600);
   //go towards and score wall stake
-  chassis.moveToPose(-30.2, 42.0, -50.4, 2500, {.maxSpeed = 50}, false);
+  chassis.moveToPose(-26.5, 45.5, -50.4, 2500, {.maxSpeed = 50}, false);
   setArmPosition(155);
   pros::delay(200);
-  chassis.turnToHeading(-51, 200);
+
+  //back up from wall stake and touch climb ladder structure
+  //chassis.moveToPoint(-10.6,18.7,1000);
+  //chassis.moveToPoint(7.4,31.2,1000);
   
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
 void match_awp() {
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+
+
+
+
     chassis.setPose(0,0,0);
 
    // setArmPosition(130);
@@ -91,6 +103,11 @@ void match_awp() {
 }
 
 void skills() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+
+
+
 
   chassis.setPose(0,0,0);
   // Set initial arm position
