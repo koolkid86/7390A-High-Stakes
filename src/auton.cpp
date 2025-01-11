@@ -6,8 +6,54 @@
 extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
 extern pros::adi::DigitalOut rushMech;
 
+
 void redRingRush() {
+
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+  setArmPosition(60);
+
+  rushMech.set_value(true);
+  chassis.moveToPoint(-7.5, 39.0, 1500, {.maxSpeed = 80},false);
+  chassis.turnToHeading(-64.0, 1000, {.maxSpeed = 30});
+  chassis.moveToPoint(-5.0, 28.4, 800, {.forwards = false, .maxSpeed = 50},false);
+
+  chassis.moveToPoint(15.2, 13.9, 3000, {.forwards = false, .maxSpeed = 80}, true );
+  while (chassis.isInMotion()){
+
+    if (distance.get() < 30){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
+
+    pros::delay(20);
+  }
+  mogoClamp.set_value(true);
+  rushMech.set_value(false);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+  chassis.moveToPoint(-10.6, 27.7, 3000, {.forwards = true, .maxSpeed = 50}, false );
+  chassis.moveToPoint(-19.2, 29.5, 3000, {.forwards = true, .maxSpeed = 50}, false );
+  pros::delay(300);
+
+  intake2.move_velocity(-600);
+
+  chassis.turnToHeading(-40, 1000, {.maxSpeed = 30});
+  chassis.moveToPose(-39, 40.1, -45.3, 5000, {.maxSpeed = 50}, false);
+  pros::delay(100);
+  setArmPosition(155);
+  pros::delay(2000);
+  setArmPosition(100);
+  pros::delay(2000);
+  setArmPosition(10);
+
+  chassis.moveToPoint(-25.4, 28.5, 3000, {.forwards = false, .maxSpeed = 50}, false );
+
+  //intake2.move_velocity(-600);
+ //chassis.moveToPose(-7.2, 31.05,-77.7, 3000, {.forwards = false, .maxSpeed = 40}, false);
+ /* chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
   setArmPosition(70);
   intake1.move_velocity(-600);
@@ -15,18 +61,18 @@ void redRingRush() {
 
   //initial rush
   rushMech.set_value(true);
-  //chassis.moveToPoint(-17.9, 40,  2700, {.maxSpeed = 80},false);
-  chassis.moveToPoint(-8, 40.,  2700, {.maxSpeed = 80},false);
+  chassis.moveToPoint(-17.9, 40,  2700, {.maxSpeed = 80},false);
+  //chassis.moveToPoint(-8, 40.,  2700, {.maxSpeed = 80},false);
   pros::delay(10);
-
+  
   //back up after rush into mogo
-  chassis.moveToPose(-0.7, 29.8, -75, 1000, {.forwards = false, .maxSpeed = 60}, false);
+  chassis.moveToPose(-5.8, 30,-83.4, 3000, {.forwards = false, .maxSpeed = 40}, false);
   intake1.move_velocity(0);
   intake2.move_velocity(0);
 
   
   //drive backwards while clamping mogo and do other bot functions
-  chassis.moveToPoint(12.6, 27.8, 500, {.forwards = false, .maxSpeed = 75}, true);
+  chassis.moveToPoint(7, 28.3, 500, {.forwards = false, .maxSpeed = 75}, true);
     while (chassis.isInMotion())
     {
       if (distance.get() < 30){
@@ -48,7 +94,8 @@ void redRingRush() {
   //mogoClamp.set_value(true);
 
   //go pick up 2 rings after clamping mogo
-  chassis.moveToPoint(2.2, 31.4, 1000, {.maxSpeed = 60}, false);
+  chassis.moveToPoint(-12.8, 23.1, 1000, {.maxSpeed = 60}, false);
+  /*
   chassis.moveToPoint(-12, 28.4, 1000, {.maxSpeed = 60}, false);
   pros::delay(100);
 
@@ -61,6 +108,8 @@ void redRingRush() {
   //back up from wall stake and touch climb ladder structure
   //chassis.moveToPoint(-10.6,18.7,1000);
   //chassis.moveToPoint(7.4,31.2,1000);
+
+  */
   
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 

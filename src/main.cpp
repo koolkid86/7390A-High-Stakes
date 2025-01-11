@@ -14,7 +14,87 @@
 
 extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
 extern pros::adi::DigitalOut rushMech;
+
+
+pros::Rotation horizontalSensor(17);
+
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::OLD_275, -3);
 //
+
+
+
+// DRIVE
+pros::MotorGroup left_motors({-9, 20, -10},
+                             pros::MotorGearset::blue); // left motors
+pros::MotorGroup right_motors({-1, 5, 7},
+                              pros::MotorGearset::blue); // right motors
+
+// drivetrain settings
+lemlib::Drivetrain drivetrain(&left_motors,             // left motor group
+                              &right_motors,            // right motor group
+                              13,                     // 10 inch track width
+                              lemlib::Omniwheel::NEW_4, // using new 4" omnis
+                              300,                      // drivetrain rpm is 300
+                              2 // horizontal drift is 2 (for now)
+);
+
+lemlib::OdomSensors sensors(
+    nullptr, // vertical tracking wheel 1, set to null
+    nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
+     &horizontal_tracking_wheel, // horizontal tracking wheel 1
+    nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a
+             // second one
+    &imu     // inertial sensor
+);
+
+// need to add wallstake pid with the vex encoders
+
+// lateral PID controller
+lemlib::ControllerSettings
+    lateral_controller(30, // proportional gain (kP)
+                       0,  // integral gain (kI)
+                       10, // derivative gain (kD)
+                       0,  // anti windup
+                       0,  // small error range, in inches
+                       0,  // small error range timeout, in milliseconds
+                       0,  // large error range, in inches
+                       0,  // large error range timeout, in milliseconds
+                       60  // maximum acceleration (slew)
+    );
+
+// angular PID controller
+lemlib::ControllerSettings
+    angular_controller(4,  // proportional gain (kP)
+                       0,  // integral gain (kI)
+                       24, // derivative gain (kD)
+                       0,  // anti windup
+                       0,  // small error range, in inches
+                       0,  // small error range timeout, in milliseconds
+                       0,  // large error range, in inches
+                       0,  // large error range timeout, in milliseconds
+                       60  // maximum acceleration (slew)
+    );
+
+// input curve for throttle input during driver control
+lemlib::ExpoDriveCurve
+    throttle_curve(3,   // joystick deadband out of 127
+                   10,  // minimum output where drivetrain will move out of 127
+                   1.03 // expo curve gain
+    );
+
+// input curve for steer input during driver control
+lemlib::ExpoDriveCurve
+    steer_curve(3,   // joystick deadband out of 127
+                10,  // minimum output where drivetrain will move out of 127
+                1.01 // expo curve gain
+    );
+
+    // create the chassis
+lemlib::Chassis chassis(drivetrain, lateral_controller, angular_controller,
+                        sensors, &throttle_curve, &steer_curve);
+
+
+
 void initialize() {
     pros::lcd::initialize();
     chassis.calibrate(); 
@@ -37,6 +117,7 @@ void initialize() {
                            chassis.getPose().theta);
             // Move encoder to line 2
             pros::lcd::print(2, "Enc:%d", encoder.get_value());
+            pros::lcd::print(3, "Rotation Sensor: %i", horizontalSensor.get_position());
             pros::delay(20);
         }
     });
