@@ -14,16 +14,16 @@ void redRingRush() {
   setArmPosition(60);
 
   rushMech.set_value(true);
-  chassis.moveToPoint(-7.5, 39.0, 1500, {.maxSpeed = 80},false);
+  chassis.moveToPoint(-7.5, 39.0, 1500, {.maxSpeed = 70},false);
   chassis.turnToHeading(-64.0, 1000, {.maxSpeed = 30});
   chassis.moveToPoint(-5.0, 28.4, 800, {.forwards = false, .maxSpeed = 50},false);
 
-  chassis.moveToPoint(15.2, 13.9, 3000, {.forwards = false, .maxSpeed = 80}, true );
+  chassis.moveToPoint(15.2, 13.9, 3000, {.forwards = false, .maxSpeed = 70}, true );
   while (chassis.isInMotion()){
 
     if (distance.get() < 30){
         mogoClamp.set_value(true);
-        pros::delay(200);
+        pros::delay(300);
         chassis.cancelMotion();
         break;
     }
@@ -34,20 +34,20 @@ void redRingRush() {
   rushMech.set_value(false);
   intake1.move_velocity(600);
   intake2.move_velocity(600);
-  chassis.moveToPoint(-10.6, 27.7, 3000, {.forwards = true, .maxSpeed = 50}, false );
-  chassis.moveToPoint(-19.2, 29.5, 3000, {.forwards = true, .maxSpeed = 50}, false );
+  chassis.moveToPoint(-10.6, 27.7, 1500, {.forwards = true, .maxSpeed = 50}, false );
+  chassis.moveToPoint(-19.2, 29.5, 1500, {.forwards = true, .maxSpeed = 50}, false );
   pros::delay(300);
 
   intake2.move_velocity(-600);
 
-  chassis.turnToHeading(-40, 1000, {.maxSpeed = 30});
-  chassis.moveToPose(-39, 40.1, -45.3, 5000, {.maxSpeed = 50}, false);
+  chassis.turnToHeading(-40, 1000, {.maxSpeed = 50});
+  chassis.moveToPose(-39, 40.1, -45.3, 3000, {.maxSpeed = 70}, false);
   pros::delay(100);
   setArmPosition(155);
-  pros::delay(2000);
-  setArmPosition(100);
-  pros::delay(2000);
-  setArmPosition(10);
+  chassis.turnToHeading(-45.7, 1000);
+  pros::delay(200);
+  chassis.turnToHeading(44.9, 1000);
+  pros::delay(500);
 
   chassis.moveToPoint(-25.4, 28.5, 3000, {.forwards = false, .maxSpeed = 50}, false );
 
