@@ -9,48 +9,107 @@ extern pros::adi::DigitalOut rushMech;
 
 void redRingRush() {
 
-  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
 
-  setArmPosition(60);
+
+
+  //with comments added :(
+
+  //setArmPosition(60);
+   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+  //setArmPosition(60);
 
   rushMech.set_value(true);
-  chassis.moveToPoint(-7.5, 39.0, 1500, {.maxSpeed = 70},false);
-  chassis.turnToHeading(-64.0, 1000, {.maxSpeed = 30});
-  chassis.moveToPoint(-5.0, 28.4, 800, {.forwards = false, .maxSpeed = 50},false);
+//first rush motion thing:
+  chassis.moveToPoint(-7.5, 39.0, 1400, {.maxSpeed = 70},false);
+  //running all the way to the back
+  chassis.turnToHeading(-64.0, 1400, {.maxSpeed = 30});
+  //cool turn
+  chassis.moveToPoint(-5.0, 28.4, 700, {.forwards = false, .maxSpeed = 40},false);
+  //woah where's the mogo
 
-  chassis.moveToPoint(15.2, 13.9, 3000, {.forwards = false, .maxSpeed = 70}, true );
+  chassis.moveToPoint(15.2, 13.9, 2500, {.forwards = false, .maxSpeed =40}, true );
+  //run towards mogo and clamp
   while (chassis.isInMotion()){
 
     if (distance.get() < 30){
         mogoClamp.set_value(true);
-        pros::delay(300);
+        pros::delay(200);
         chassis.cancelMotion();
         break;
     }
 
     pros::delay(20);
   }
+
   mogoClamp.set_value(true);
   rushMech.set_value(false);
   intake1.move_velocity(600);
   intake2.move_velocity(600);
-  chassis.moveToPoint(-10.6, 27.7, 1500, {.forwards = true, .maxSpeed = 50}, false );
-  chassis.moveToPoint(-19.2, 29.5, 1500, {.forwards = true, .maxSpeed = 50}, false );
-  pros::delay(300);
+  //intake stuff for getting more rings
+  chassis.moveToPoint(-10.6, 25.7, 1000, {.forwards = true, .maxSpeed = 60}, false );
+ // chassis.moveToPoint(-19.2, 29.5, 1000, {.forwards = true, .maxSpeed = 60}, false );
+ //get the last extra ring
+  pros::delay(100);
+
+
+//last ring again oops
+  chassis.moveToPoint(-24.7, 15.6, 1000, {.forwards = true, .maxSpeed = 60}, false );
+
+  pros::delay(2000);
 
   intake2.move_velocity(-600);
+//touch the
+  chassis.moveToPoint(8.2, 16.2, 1100, {.forwards = false, .maxSpeed = 80}, false);
+  setArmPosition(130);
 
-  chassis.turnToHeading(-40, 1000, {.maxSpeed = 50});
-  chassis.moveToPose(-39, 40.1, -45.3, 3000, {.maxSpeed = 70}, false);
+
+
+
+
+
+
+
+
+
+
+  chassis.moveToPoint(25.0, 46.5, 1100, {.forwards = true, .maxSpeed = 80}, false);/*
+ 
+
+  /*
+
+  chassis.turnToHeading(-40, 900, {.maxSpeed = 50});
+  chassis.moveToPose(-39, 40.1, -45.3, 1800, {.maxSpeed =100}, false);
+
   pros::delay(100);
+  
   setArmPosition(155);
-  chassis.turnToHeading(-45.7, 1000);
-  pros::delay(200);
-  chassis.turnToHeading(44.9, 1000);
+  chassis.turnToHeading(-45.7, 400, {. maxSpeed =60});
+  pros::delay(200);1☺
+  chassis.turnToHeading(44.9, 400, {. maxSpeed = 60});
   pros::delay(500);
+  */
+ /**/
 
-  chassis.moveToPoint(-25.4, 28.5, 3000, {.forwards = false, .maxSpeed = 50}, false );
+  /*
 
+  chassis.turnToHeading(-40, 900, {.maxSpeed = 50});
+  chassis.moveToPose(-39, 40.1, -45.3, 1800, {.maxSpeed =100}, false);
+
+  pros::delay(100);
+  
+  setArmPosition(155);
+  chassis.turnToHeading(-45.7, 400, {. maxSpeed =60});
+  pros::delay(200);
+  chassis.turnToHeading(44.9, 400, {. maxSpeed = 60});
+  pros::delay(500);
+  */
+/*
+  chassis.moveToPoint(-8.2, 16.2, 1500, {.forwards = false, .maxSpeed = 80}, false);
+  setArmPosition(130);
+  
+  chassis.moveToPoint(25.0, 46.5, 1500, {.forwards = true, .maxSpeed = 80}, false);
+*/
   //intake2.move_velocity(-600);
  //chassis.moveToPose(-7.2, 31.05,-77.7, 3000, {.forwards = false, .maxSpeed = 40}, false);
  /* chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -153,15 +212,204 @@ void redGoalRush() {
 
 
 void blueRingRush(){
-  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);  
+    
+    
 
+  //with comments added :)
+
+  //setArmPosition(60);
+   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+  //setArmPosition(60);
+
+  rushMech.set_value(true);
+//first rush motion thing:
+  chassis.moveToPoint(7.5, 39.0, 1400, {.maxSpeed = 70},false);
+  //running all the way to the back
+  chassis.turnToHeading(64.0, 1400, {.maxSpeed = 30});
+  //cool turn
+  chassis.moveToPoint(5.0, 28.4, 700, {.forwards = false, .maxSpeed = 40},false);
+  //woah where's the mogo
+
+  chassis.moveToPoint(-15.2, 13.9, 2500, {.forwards = false, .maxSpeed =40}, true );
+  //run towards mogo and clamp
+  while (chassis.isInMotion()){
+
+    if (distance.get() < 30){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
+
+    pros::delay(20);
+  }
+
+  mogoClamp.set_value(true);
+  rushMech.set_value(false);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+  //intake stuff for getting more rings
+  chassis.moveToPoint(10.6, 25.7, 1000, {.forwards = true, .maxSpeed = 60}, false );
+ // chassis.moveToPoint(-19.2, 29.5, 1000, {.forwards = true, .maxSpeed = 60}, false );
+ //get the last extra ring
+  pros::delay(100);
+
+
+//last ring again oops
+  chassis.moveToPoint(26.7, 15.6, 1000, {.forwards = true, .maxSpeed = 60}, false );
+
+  pros::delay(2000);
+
+  intake2.move_velocity(-600);
+//touch the
+  chassis.moveToPoint(-8.2, 16.2, 1100, {.forwards = false, .maxSpeed = 80}, false);
+  setArmPosition(130);
+
+  chassis.moveToPoint(-25.0, 46.5, 1100, {.forwards = true, .maxSpeed = 80}, false);/*
+ 
+    //thought this worked but turned out bad
+    /*
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+
+  rushMech.set_value(true);
+  chassis.moveToPoint(7.5, 39.0, 1400, {.maxSpeed = 70},false);
+  chassis.turnToHeading(64.0, 1400, {.maxSpeed = 30});
+  chassis.moveToPoint(5.0, 28.4, 700, {.forwards = false, .maxSpeed = 40},false);
+
+  chassis.moveToPoint(-15.2, 13.9, 2500, {.forwards = false, .maxSpeed =40}, true );
+  while (chassis.isInMotion()){
+
+    if (distance.get() < 30){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
+
+    pros::delay(20);
+  }
+  mogoClamp.set_value(true);
+  rushMech.set_value(false);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+  chassis.moveToPoint(10.6, 25.7, 1000, {.forwards = true, .maxSpeed = 60}, false );
+ // chassis.moveToPoint(19.2, 29.5, 1000, {.forwards = true, .maxSpeed = 60}, false );
+  pros::delay(100);
+
+
+
+  chassis.moveToPoint(24.7, 15.6, 1000, {.forwards = true, .maxSpeed = 60}, false );
+
+  pros::delay(2000);
+
+  intake2.move_velocity(-600);
+
+  chassis.moveToPoint(-8.2, 16.2, 1100, {.forwards = false, .maxSpeed = 80}, false);
+  setArmPosition(130);
+  
+  //chassis.moveToPoint(28.0, 46.5, 1100, {.forwards = true, .maxSpeed = 80}, false);
+
+  /*
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+
+  setArmPosition(60);
+
+  rushMech.set_value(true);
+  chassis.moveToPoint(7.5, 39.0, 1400, {.maxSpeed = 70},false);
+  chassis.turnToHeading(64.0, 1400, {.maxSpeed = 30});
+  chassis.moveToPoint(5.0, 28.4, 700, {.forwards = false, .maxSpeed = 40},false);
+
+  chassis.moveToPoint(-15.2, 13.9, 2500, {.forwards = false, .maxSpeed =40}, true );
+  while (chassis.isInMotion()){
+
+    if (distance.get() < 30){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
+
+    pros::delay(20);
+  }
+  mogoClamp.set_value(true);
+  rushMech.set_value(false);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+  chassis.moveToPoint(10.6, 27.7, 1400, {.forwards = true, .maxSpeed = 60}, false );
+  chassis.moveToPoint(19.2, 29.5, 1400, {.forwards = true, .maxSpeed = 60}, false );
+  pros::delay(100);
+
+  intake2.move_velocity(-600);
+
+
+  chassis.turnToHeading(40, 900, {.maxSpeed = 50});
+  chassis.moveToPose(39, 40.1, 45.3, 1800, {.maxSpeed =100}, false);
+  pros::delay(100);
+  setArmPosition(155);
+  chassis.turnToHeading(45.7, 400, {. maxSpeed =60});
+  pros::delay(200);
+  chassis.turnToHeading(-44.9, 400, {. maxSpeed = 60});
+  pros::delay(500);
+
+  chassis.moveToPoint(8.2, 16.2, 1500, {.forwards = false, .maxSpeed = 127}, false);
+  setArmPosition(130);
+  chassis.moveToPoint(-28.0, 49.5, 1500, {.forwards = true, .maxSpeed = 127}, false);
+
+*/
 }
 
 
 
-void blueGoalRush(){
+void redRingRushV2(){
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE); 
 
+  
+  rushMech.set_value(true);
+  chassis.moveToPoint(-8.3, 25.8, 700, {.maxSpeed = 50, .minSpeed = 30},false);
+  chassis.moveToPose(-17.8, 46.6, -5.0, 1900, {.maxSpeed = 70},false);
+  chassis.moveToPoint(-14.8, 34, 700, {.forwards = false, .maxSpeed = 50, .minSpeed = 30},false);
+
+  chassis.turnToHeading(-64.0, 1400, {.maxSpeed = 20});
+
+  chassis.moveToPoint(15.2, 13.9, 2500, {.forwards = false, .maxSpeed =40}, true );
+  while (chassis.isInMotion()){
+
+    if (distance.get() < 22){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
+
+    pros::delay(20);
+  }
+  mogoClamp.set_value(true);
+  rushMech.set_value(false);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+
+  /*
+  chassis.moveToPoint(-10.6, 27.7, 1400, {.forwards = true, .maxSpeed = 60}, false );
+  chassis.moveToPoint(-19.2, 29.5, 1400, {.forwards = true, .maxSpeed = 60}, false );
+  pros::delay(100);
+
+  intake2.move_velocity(-600);
+  */
+
+ /* chassis.turnToHeading(-40, 900, {.maxSpeed = 50});
+  chassis.moveToPose(-39, 40.1, -45.3, 1800, {.maxSpeed =100}, false);
+  pros::delay(100);
+  setArmPosition(155);
+  chassis.turnToHeading(-45.7, 400, {. maxSpeed =60});
+  pros::delay(200);
+  chassis.turnToHeading(44.9, 400, {. maxSpeed = 60});
+  pros::delay(500);
+
+  chassis.moveToPoint(-8.2, 16.2, 1500, {.forwards = false, .maxSpeed = 127}, false);
+  setArmPosition(130);
+  chassis.moveToPoint(28.0, 49.5, 1500, {.forwards = true, .maxSpeed = 127}, false); */
 }
 
 
@@ -170,69 +418,119 @@ void blueGoalRush(){
 
 
 void skills() {
-  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  
+ 
+  setArmPosition(135);
+  pros::delay(1000);
+  chassis.moveToPoint(0, 2.5, 500, {.maxSpeed = 50}, false);
+  chassis.moveToPoint(0, -11.7, 1500, {.forwards = false, .maxSpeed = 50}, false);
+  setArmPosition(1);
+  chassis.turnToHeading(-90, 1500, {.maxSpeed = 50}); // turn to face mogo
 
+  chassis.moveToPoint(25, -22.1, 5000, {.forwards = false, .maxSpeed = 50}, true); // go back to clamp mogo
+  
+   while (chassis.isInMotion()){
 
-  chassis.setPose(0,0,0);
-  // Set initial arm position
-  setArmPosition(130);
-  pros::delay(750);
-  setArmPosition(0);
-  pros::delay(750);
+    if (distance.get() < 30){
+        mogoClamp.set_value(true);
+        pros::delay(200);
+        chassis.cancelMotion();
+        break;
+    }
 
-  // Move to goal
-
-
-  /**/
-  chassis.moveToPose(19, -12.7, -90, 3000, {.forwards = false, .maxSpeed = 60},
-                     false);
-
-  while (chassis.isInMotion() && distance.get() > 32) {
-    pros::delay(10); // save cpu resources
+    pros::delay(20);
   }
 
-  pros::delay(750);
-  // Mogo
   mogoClamp.set_value(true);
+
+  chassis.turnToHeading(90, 1500, {.maxSpeed = 50}); // turn to face rings
 
   intake1.move_velocity(600);
   intake2.move_velocity(600);
 
-  // chassis.turnToHeading(65, 1000, {.maxSpeed = 80}, false);
+  chassis.moveToPoint(35,-22, 1500, {.maxSpeed = 30}, false); // go pick up the 2 rings
 
-  pros::delay(750);
+  //scuffed antijam code
+  pros::delay(1000);
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  pros::delay(400);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
 
-  chassis.moveToPose(55, -11, 90, 3000, {.maxSpeed = 80}, false);
 
-  chassis.moveToPose(60, 2, 219, 3000, {.forwards = false, .maxSpeed = 80},
-                     false);
+  chassis.moveToPoint(50,-22, 2000, {.maxSpeed = 30}, false); // go pick up the 2 rings
 
-  // After setting goal
-  mogoClamp.set_value(false);
+   pros::delay(1000);
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  pros::delay(400);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
+  
+  //back up after picking up the rings
+  chassis.moveToPoint(22, -22, 1500, {.forwards = false, .maxSpeed = 50}, false); // go pick up the last ring in the cornerish
+  chassis.turnToHeading(59.4, 1500, {.maxSpeed = 50},false);
+  chassis.moveToPoint(45.9, -7.4, 1500, {.maxSpeed = 50},false);
+  //scuffed antijam code
+  pros::delay(1000);
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  pros::delay(400);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
 
-  arm.move_absolute(260, 80);
+  //back up and angle to pick up other two rings towards wallstake
+  chassis.moveToPoint(27.5, -14.5, 2000, {.forwards = false, .maxSpeed = 50}, false);
+  chassis.turnToHeading(144.7, 2000);
 
-  // chassis.moveToPoint(60, -40, 3000, {.forwards = true, .maxSpeed = 80},
-  // false);
+  chassis.moveToPoint(37.4, -40.1, 2000, {.forwards = true, .maxSpeed = 50}, false);
+  //scuffed antijam code
+  pros::delay(1000);
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  pros::delay(400);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
 
-  chassis.turnToHeading(220, 2000, {.maxSpeed = 80}, false);
 
-  chassis.moveToPoint(54, -55, 2000, {.forwards = true, .maxSpeed = 80}, false);
+chassis.moveToPoint(52.4,-67.8,2000, {.maxSpeed = 50}, false);
+  //scuffed antijam code
+  pros::delay(1000);
+  intake1.move_velocity(-600);
+  intake2.move_velocity(-600);
+  pros::delay(400);
+  intake1.move_velocity(600);
+  intake2.move_velocity(600);
 
-  chassis.turnToHeading(90, 2000, {.maxSpeed = 80}, false);
+ chassis.moveToPoint(56,-8, 4000, {.forwards = false, .maxSpeed = 80},false);
+ mogoClamp.set_value(false);
+ chassis.moveToPoint(0,-8, 5000, {.maxSpeed = 30});
 
-  chassis.moveToPoint(65, -55, 2000, {.forwards = true, .maxSpeed = 80}, false);
+intake1.move_velocity(0);
+intake2.move_velocity(0);
 
-  intake1.move_velocity(0);
-  intake2.move_velocity(0);
+//REMOVE FOR ACTUAL COMP
+while (distance.get() > 30){
+  pros::delay(25);
 
-  arm.move_absolute(3000, 80);
 }
 
-void (*autonFunctions[])() = {redRingRush, redGoalRush, blueRingRush, blueGoalRush, skills};
+pros::delay(1000);
 
+chassis.moveToPoint(-27.6, -11.9, 5000, {.maxSpeed = 50});
+chassis.moveToPoint(-70.6, 8.2, 5000, {.maxSpeed = 100});
+
+  
+
+  
+
+}
+
+void (*autonFunctions[])() = { redGoalRush, skills, blueRingRush, redRingRushV2, redRingRush};
+ 
 int autonSelect = 1;
-std::string autonNames[5] = {"redRingRush", "redGoalRush", "blueRingRush", "blueGoalRush", "Skills"};
+std::string autonNames[5] = { "redGoalRush", "skills", "blueRingRush", "RED RINGRUSHV2", "redringRush"};
 
 void previousAuton() {
   if (autonSelect == 0) {

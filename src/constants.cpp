@@ -6,9 +6,8 @@
 // MOTORS
 pros::Motor arm(14);
 pros::Motor intake1(2);
-pros::Motor intake2(8);
-#define QUAD_TOP_PORT 'C'
-#define QUAD_BOTTOM_PORT 'B'
+pros::Motor intake2(6);
+
 
 // PNEUMATICS
 pros::adi::DigitalOut mogoClamp('A');
@@ -19,5 +18,3 @@ pros::adi::DigitalOut rushMech('H');
 pros::Distance distance(19);
 pros::Imu imu(11);
 pros::adi::Encoder encoder('C', 'D', true);
-
-

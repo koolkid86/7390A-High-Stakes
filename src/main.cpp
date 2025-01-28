@@ -18,7 +18,7 @@ extern pros::adi::DigitalOut rushMech;
 
 pros::Rotation horizontalSensor(17);
 
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::OLD_275, -3);
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::NEW_2, -3);
 //
 
 
@@ -64,15 +64,15 @@ lemlib::ControllerSettings
 
 // angular PID controller
 lemlib::ControllerSettings
-    angular_controller(4,  // proportional gain (kP)
-                       0,  // integral gain (kI)
-                       24, // derivative gain (kD)
-                       0,  // anti windup
-                       0,  // small error range, in inches
-                       0,  // small error range timeout, in milliseconds
-                       0,  // large error range, in inches
-                       0,  // large error range timeout, in milliseconds
-                       60  // maximum acceleration (slew)
+    angular_controller(2, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              10, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                              60 // maximum acceleration (slew)
     );
 
 // input curve for throttle input during driver control
@@ -248,7 +248,7 @@ void opcontrol() {
         // Auto-clamp logic (if manual override is not engaged)
         int currentTime = pros::millis();
         if (!manualOverride &&
-            (currentTime - autoClampLastActivated >= AUTO_CLAMP_COOLDOWN)) {
+            (currentTime - autoClampLastActivated >= AUTO_CLAMP_COOLDOWN && !currentL1State)) {
             double distanceValue = distance.get(); // Get distance sensor value
 
             // Trigger auto-clamping if object is detected within threshold
