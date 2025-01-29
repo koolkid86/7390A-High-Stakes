@@ -16,25 +16,25 @@ extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constan
 extern pros::adi::DigitalOut rushMech;
 
 
-pros::Rotation horizontalSensor(17);
+pros::Rotation horizontalSensor(4);
 
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::OLD_275, -3);
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::OLD_275, 4);
 //
 
 
 
 // DRIVE
-pros::MotorGroup left_motors({-9, 20, -10},
+pros::MotorGroup left_motors({-1, -2, -3},
                              pros::MotorGearset::blue); // left motors
-pros::MotorGroup right_motors({-1, 5, 7},
+pros::MotorGroup right_motors({8, 9, 10},
                               pros::MotorGearset::blue); // right motors
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&left_motors,             // left motor group
                               &right_motors,            // right motor group
-                              13,                     // 10 inch track width
-                              lemlib::Omniwheel::NEW_4, // using new 4" omnis
-                              300,                      // drivetrain rpm is 300
+                              12.5,                     // 10 inch track width
+                              lemlib::Omniwheel::NEW_275, // using new 4" omnis
+                              450,                      // drivetrain rpm is 300
                               2 // horizontal drift is 2 (for now)
 );
 
@@ -106,7 +106,7 @@ void initialize() {
     pros::lcd::register_btn0_cb(previousAuton);
     pros::lcd::register_btn2_cb(nextAuton);
 
-    pros::lcd::print(5, "Initial Encoder Ticks: %d", encoder.get_value());
+    pros::lcd::print(5, "Initial Encoder Ticks: %d", arm.get_position());
 
     pros::Task screen_task([&]() {
         while (true) {
@@ -116,7 +116,7 @@ void initialize() {
                            chassis.getPose().y,
                            chassis.getPose().theta);
             // Move encoder to line 2
-            pros::lcd::print(2, "Enc:%d", encoder.get_value());
+            pros::lcd::print(2, "Enc:%d", arm.get_position());
             pros::lcd::print(3, "Rotation Sensor: %i", horizontalSensor.get_position());
             pros::delay(20);
         }
@@ -221,13 +221,13 @@ void opcontrol() {
         //////////////////////// INTAKE CONTROL //////////////////////////////
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
             intake1.move_velocity(600); // Intake forward
-            intake2.move_velocity(600);
+           
         } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             intake1.move_velocity(-600); // Intake reverse
-            intake2.move_velocity(-600);
+          
         } else {
             intake1.move_velocity(0); // Stop intake
-            intake2.move_velocity(0);
+
         }
 
         ///////////////////// MOGO CLAMP CONTROL ////////////////////////////////

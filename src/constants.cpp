@@ -4,9 +4,9 @@
 
 
 // MOTORS
-pros::Motor arm(14);
-pros::Motor intake1(2);
-pros::Motor intake2(8);
+pros::Motor arm(19);
+pros::Motor intake1(7);
+
 #define QUAD_TOP_PORT 'C'
 #define QUAD_BOTTOM_PORT 'B'
 

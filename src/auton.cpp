@@ -33,12 +33,12 @@ void redRingRush() {
   mogoClamp.set_value(true);
   rushMech.set_value(false);
   intake1.move_velocity(600);
-  intake2.move_velocity(600);
+
   chassis.moveToPoint(-10.6, 27.7, 1500, {.forwards = true, .maxSpeed = 50}, false );
   chassis.moveToPoint(-19.2, 29.5, 1500, {.forwards = true, .maxSpeed = 50}, false );
   pros::delay(300);
 
-  intake2.move_velocity(-600);
+ 
 
   chassis.turnToHeading(-40, 1000, {.maxSpeed = 50});
   chassis.moveToPose(-39, 40.1, -45.3, 3000, {.maxSpeed = 70}, false);
@@ -146,7 +146,7 @@ void redGoalRush() {
     chassis.moveToPoint(33.5, -34.24, 2000, {.forwards = true, .maxSpeed = 100});
 
     intake1.move_velocity(600);
-    intake2.move_velocity(600);
+   
     // AWP (Alliance Win Point) autonomous routine
     // Add your AWP-specific autonomous code here
 }
@@ -196,7 +196,8 @@ void skills() {
   mogoClamp.set_value(true);
 
   intake1.move_velocity(600);
-  intake2.move_velocity(600);
+  
+
 
   // chassis.turnToHeading(65, 1000, {.maxSpeed = 80}, false);
 
@@ -224,7 +225,7 @@ void skills() {
   chassis.moveToPoint(65, -55, 2000, {.forwards = true, .maxSpeed = 80}, false);
 
   intake1.move_velocity(0);
-  intake2.move_velocity(0);
+ 
 
   arm.move_absolute(3000, 80);
 }
