@@ -220,7 +220,7 @@ void opcontrol() {
 
         //////////////////////// INTAKE CONTROL //////////////////////////////
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            intake1.move_velocity(600); // Intake forward
+            intake1.move_velocity(450); // Intake forward
            
         } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             intake1.move_velocity(-600); // Intake reverse
