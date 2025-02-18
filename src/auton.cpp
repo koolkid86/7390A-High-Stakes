@@ -211,7 +211,7 @@ void skills() {
   // After setting goal
   mogoClamp.set_value(false);
 
-  arm.move_absolute(260, 80);
+  arm.move_absolute(260, 81); /////CHANGE CHNAGE HCNAGE CHANGE CHANGE 81 to 80
 
   // chassis.moveToPoint(60, -40, 3000, {.forwards = true, .maxSpeed = 80},
   // false);
