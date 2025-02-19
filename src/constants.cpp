@@ -12,12 +12,13 @@ pros::Motor intake1(7);
 
 // PNEUMATICS
 pros::adi::DigitalOut mogoClamp('A');
-pros::adi::DigitalOut doinker('B'); // Doinker pneumatic on port B
-pros::adi::DigitalOut rushMech('H');
+pros::adi::DigitalOut doinker('E'); // Doinker pneumatic on port B
+pros::adi::DigitalOut rushMech('G');
+pros::adi::DigitalOut brownLady('F');
 
 // SENSORS
-pros::Distance distance(19);
-pros::Imu imu(11);
+pros::Distance distance(11);
+pros::Imu imu(18);
 pros::adi::Encoder encoder('C', 'D', true);
 
 

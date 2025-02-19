@@ -160,8 +160,12 @@ void blueRingRush(){
 
 
 void blueGoalRush(){
-  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE); 
-
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0,0,0);
+  rushMech.set_value(true);
+  doinker.set_value(true);
+  chassis.moveToPoint(0, 38.8, 10000, {.forwards = true, .maxSpeed = 50});
+  //moves to mid mogo and grabs it w doinker
 }
 
 
