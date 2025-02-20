@@ -12,14 +12,15 @@ extern pros::Optical optical;
 
 void redRingRush() {
   chassis.setPose(0,0,0);
-  chassis.moveToPoint(0,-37.1,4000, {.forwards = false, .maxSpeed = 60}, false);
+  chassis.moveToPoint(0,-37.1,4000, {.forwards = false, .maxSpeed = 50}, false);
 
   mogoClamp.set_value(true);
-  pros::delay(750);
+  pros::delay(1000);
   intake1.move_velocity(600);
   chassis.turnToHeading(90,2000);
 
-  chassis.moveToPoint(26, -37.1, 4000, {.maxSpeed = 60});
+  chassis.moveToPoint(18, -35.8, 4000);
+  
  /*  mogoClamp.set_value(true); 
  
    // Start the colorsort task to eject red rings
@@ -133,7 +134,7 @@ void BGoalRush() {
   chassis.moveToPose(-26.7, 20, -124.9, 2500, {}, false);
   intake1.move_velocity(-600);
 
-
+  mogoClamp.set_value(false);
 
   doinker.set_value(true);
   rushMech.set_value(false);
@@ -228,7 +229,7 @@ void RGoalRush(){
   chassis.moveToPose(26.7, 20, 124.9, 2500, {}, false);
   intake1.move_velocity(-600);
 
-
+  mogoClamp.set_value(false);
 
   doinker.set_value(true);
   rushMech.set_value(false);
@@ -253,7 +254,7 @@ void RGoalRush(){
 
   chassis.moveToPose(36.9, 7.7, 280.3, 1000, {.forwards = false}, false);
 
-  mogoClamp.set_value(false);
+  // mogoClamp.set_value(false);
 
   pros::delay(500);
 
@@ -283,14 +284,14 @@ void RGoalRush(){
 void blueRingRush(){
   // chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);  
   chassis.setPose(0,0,0);
-  chassis.moveToPoint(0,-3,4000, {.forwards = false, .maxSpeed = 50}, false);
+  chassis.moveToPoint(0,-37.1,4000, {.forwards = false, .maxSpeed = 50}, false);
 
   mogoClamp.set_value(true);
-  pros::delay(750);
+  pros::delay(1000);
   intake1.move_velocity(600);
   chassis.turnToHeading(-90,2000);
 
-  chassis.moveToPoint(-10, -35, 4000, {.maxSpeed = 60});
+  chassis.moveToPoint(-18.5, -35.8, 4000);
   
 }
 
