@@ -7,6 +7,8 @@
 #include <fstream>
 #include "armcontrol.hpp"
 #include "pros/rtos.hpp"
+#include "globals.hpp"
+#include "constants.hpp"
 
 
 //test pls
@@ -16,9 +18,11 @@ extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constan
 extern pros::adi::DigitalOut rushMech;
 
 
-pros::Rotation horizontalSensor(4);
+pros::Rotation horizontalSensor(5);
+pros::Rotation verticalSensor(21);
 
-lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::OLD_275, 4);
+lemlib::TrackingWheel horizontal_tracking_wheel(&horizontalSensor, lemlib::Omniwheel::NEW_2, -3.4);
+lemlib::TrackingWheel vertical_tracking_wheel(&verticalSensor, lemlib::Omniwheel::NEW_2, -1);
 //
 
 
@@ -39,7 +43,7 @@ lemlib::Drivetrain drivetrain(&left_motors,             // left motor group
 );
 
 lemlib::OdomSensors sensors(
-    nullptr, // vertical tracking wheel 1, set to null
+    &vertical_tracking_wheel, // vertical tracking wheel 1, set to null
     nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
      &horizontal_tracking_wheel, // horizontal tracking wheel 1
     nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a
@@ -49,31 +53,30 @@ lemlib::OdomSensors sensors(
 
 // need to add wallstake pid with the vex encoders
 
+
 // lateral PID controller
-lemlib::ControllerSettings
-    lateral_controller(30, // proportional gain (kP)
-                       0,  // integral gain (kI)
-                       10, // derivative gain (kD)
-                       0,  // anti windup
-                       0,  // small error range, in inches
-                       0,  // small error range timeout, in milliseconds
-                       0,  // large error range, in inches
-                       0,  // large error range timeout, in milliseconds
-                       60  // maximum acceleration (slew)
-    );
+lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              3, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in inches
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in inches
+                                              500, // large error range timeout, in milliseconds
+                                              20 // maximum acceleration (slew)
+);
 
 // angular PID controller
-lemlib::ControllerSettings
-    angular_controller(4,  // proportional gain (kP)
-                       0,  // integral gain (kI)
-                       24, // derivative gain (kD)
-                       0,  // anti windup
-                       0,  // small error range, in inches
-                       0,  // small error range timeout, in milliseconds
-                       0,  // large error range, in inches
-                       0,  // large error range timeout, in milliseconds
-                       60  // maximum acceleration (slew)
-    );
+lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
+                                              0, // integral gain (kI)
+                                              10, // derivative gain (kD)
+                                              3, // anti windup
+                                              1, // small error range, in degrees
+                                              100, // small error range timeout, in milliseconds
+                                              3, // large error range, in degrees
+                                              500, // large error range timeout, in milliseconds
+                                              0 // maximum acceleration (slew)
+);
 
 // input curve for throttle input during driver control
 lemlib::ExpoDriveCurve
@@ -107,6 +110,7 @@ void initialize() {
     pros::lcd::register_btn2_cb(nextAuton);
 
     pros::lcd::print(5, "Initial Encoder Ticks: %d", arm.get_position());
+    pros::lcd::print(6, "Optical Proximity: %d", optical.get_proximity());
 
     pros::Task screen_task([&]() {
         while (true) {
@@ -117,7 +121,8 @@ void initialize() {
                            chassis.getPose().theta);
             // Move encoder to line 2
             pros::lcd::print(2, "Enc:%d", arm.get_position());
-            pros::lcd::print(3, "Rotation Sensor: %i", horizontalSensor.get_position());
+            pros::lcd::print(3, "horizontal: %i", horizontalSensor.get_position());
+            pros::lcd::print(4, "vertical: %i", verticalSensor.get_position());
             pros::delay(20);
         }
     });
@@ -203,9 +208,9 @@ void opcontrol() {
     // Auto-clamp settings
     const int AUTO_CLAMP_COOLDOWN = 5000; // Cooldown period for auto-clamp (ms)
     const double DISTANCE_THRESHOLD =
-        30; // Distance threshold for auto-clamp (mm)
+        40; // Distance threshold for auto-clamp (mm)
 
-    // Main control loop
+    // Main control loop 
     while (true) {
         /////////////////////////// CHASSIS CONTROL //////////////////////////
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
@@ -215,7 +220,8 @@ void opcontrol() {
         ///////////////// ARM CONTROL /////////////////////////////
          if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)) {
 			nextState();
-		}
+            usePiston = true;
+		} 
 
 
         //////////////////////// INTAKE CONTROL //////////////////////////////
@@ -281,8 +287,25 @@ void opcontrol() {
         if (cL2State && !lL2State) {  // Button just pressed
             dState = !dState;  // Toggle state
             rushMech.set_value(dState);
+           
         }
         lL2State = cL2State;
+
+
+
+
+         // lady brown 4th position control (toggle with L2)
+         static bool adoinkerState = false;
+         static bool alastL2State = false;
+         bool acurrentL2State = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+         
+         if (acurrentL2State && !alastL2State) {  // Button just pressed
+            
+            usePiston = false;
+            setArmPosition(220);
+         }
+         alastL2State = acurrentL2State;
+
 
         //////////////////////////////// LOOP DELAY ////////////////////////////////
         pros::delay(20); // Delay to prevent overloading cpu resources

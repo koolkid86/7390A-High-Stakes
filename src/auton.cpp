@@ -2,55 +2,23 @@
 #include "main.h"
 #include "pros/rtos.hpp"
 #include "armcontrol.hpp"
+#include "globals.hpp"
 
 extern pros::adi::DigitalOut doinker; // Reference to doinker defined in constants.cpp
 extern pros::adi::DigitalOut rushMech;
+extern pros::Optical optical;
 
+#include "colorsort.hpp"
 
 void redRingRush() {
-
-  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-
-  setArmPosition(60);
-
-  rushMech.set_value(true);
-  chassis.moveToPoint(-7.5, 39.0, 1500, {.maxSpeed = 70},false);
-  chassis.turnToHeading(-64.0, 1000, {.maxSpeed = 30});
-  chassis.moveToPoint(-5.0, 28.4, 800, {.forwards = false, .maxSpeed = 50},false);
-
-  chassis.moveToPoint(15.2, 13.9, 3000, {.forwards = false, .maxSpeed = 70}, true );
-  while (chassis.isInMotion()){
-
-    if (distance.get() < 30){
-        mogoClamp.set_value(true);
-        pros::delay(300);
-        chassis.cancelMotion();
-        break;
-    }
-
-    pros::delay(20);
-  }
-  mogoClamp.set_value(true);
-  rushMech.set_value(false);
-  intake1.move_velocity(600);
-
-  chassis.moveToPoint(-10.6, 27.7, 1500, {.forwards = true, .maxSpeed = 50}, false );
-  chassis.moveToPoint(-19.2, 29.5, 1500, {.forwards = true, .maxSpeed = 50}, false );
-  pros::delay(300);
-
+  mogoClamp.set_value(true); 
  
+   // Start the colorsort task to eject red rings
+   startColorSortTask(ColorSortMode::RED);
+ 
+   pros::delay(100000);
 
-  chassis.turnToHeading(-40, 1000, {.maxSpeed = 50});
-  chassis.moveToPose(-39, 40.1, -45.3, 3000, {.maxSpeed = 70}, false);
-  pros::delay(100);
-  setArmPosition(155);
-  chassis.turnToHeading(-45.7, 1000);
-  pros::delay(200);
-  chassis.turnToHeading(44.9, 1000);
-  pros::delay(500);
-
-  chassis.moveToPoint(-25.4, 28.5, 3000, {.forwards = false, .maxSpeed = 50}, false );
-
+   stopColorSortTask();
   //intake2.move_velocity(-600);
  //chassis.moveToPose(-7.2, 31.05,-77.7, 3000, {.forwards = false, .maxSpeed = 40}, false);
  /* chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
@@ -113,42 +81,99 @@ void redRingRush() {
   
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
-void redGoalRush() {
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+void BGoalRush() {
+  color = 0;
+  //chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
+  chassis.setPose(0,0,0);
+
+  doinker.set_value(true);
+  rushMech.set_value(true);
+
+  chassis.moveToPoint(0,35, 3000,{}, true);
+  pros::delay(830);
+  rushMech.set_value(false);
+  pros::delay(500);
+
+  
+  chassis.moveToPoint(-3, 25, 8000,{.forwards = false}, false);
+
+  rushMech.set_value(true);
+
+  chassis.moveToPoint(-3, 17, 7000,{.forwards = false}, false);
+  
+  doinker.set_value(false);
+  chassis.turnToHeading(-106.7, 1500, {.minSpeed = 20}, false);
+
+  chassis.moveToPoint(12.1, 25.2, 2000, {.forwards = false, .maxSpeed = 70}, true);
+
+  while (chassis.isInMotion() && distance.get() > 40) {
+    pros::delay(10); // save cpu resources
+  }
+  chassis.cancelMotion();
+  mogoClamp.set_value(true);
+
+  pros::delay(700);
+  intake1.move_velocity(500);
+
+ // pros::delay(1000);
+  //intake1.move_velocity(0);
+
+  
+
+
+  chassis.moveToPose(-26.7, 20, -124.9, 2500, {}, false);
+  intake1.move_velocity(-600);
 
 
 
+  doinker.set_value(true);
+  rushMech.set_value(false);
 
+  pros::delay(500);
+  chassis.moveToPoint(-32.6, 11.4, 1000,  {.minSpeed = 20}, false);
 
-    chassis.setPose(0,0,0);
-
-   // setArmPosition(130);
-    pros::delay(500);
-   // setArmPosition(0);
-    
-    chassis.moveToPoint(16.13, -36.7, 2500, {.forwards = false, .maxSpeed = 70}, true );
-
-    while (chassis.isInMotion() && distance.get() > 32) {
-      pros::delay(10); // save cpu resources
-    }
-    // cancel the motion once the robot detects mogo is in the bot and clamped
-    // pros::delay(100); // wait for mogo to clamp and settle
-    mogoClamp.set_value(true);
-
-    pros::delay(250);
-    chassis.cancelMotion();
-
-
-    mogoClamp.set_value(true);
-    pros::delay(250);
-
-    chassis.turnToHeading(98.2, 1000, {.maxSpeed = 100, .minSpeed = 10}, false);
-    chassis.moveToPoint(33.5, -34.24, 2000, {.forwards = true, .maxSpeed = 100});
-
-    intake1.move_velocity(600);
+  chassis.turnToHeading(-208, 500, {.maxSpeed = 100});
    
+  chassis.moveToPoint(-27.7, 2.3, 1000, {}, false);
     // AWP (Alliance Win Point) autonomous routine
     // Add your AWP-specific autonomous code here
+ 
+  doinker.set_value(false);
+
+  
+
+ // chassis.moveToPoint(-26.5, -1.1, 1500);
+
+//  chassis.moveToPoint(-23.9, 4.7, 1500);
+
+
+  chassis.moveToPose(-36.9, 7.7, -280.3, 1000, {.forwards = false}, false);
+
+  mogoClamp.set_value(false);
+
+  pros::delay(500);
+
+  chassis.moveToPoint(-5.1, 8.7, 500, {.maxSpeed = 120});
+
+  chassis.moveToPoint(-11.3, 11.8, 500, {.maxSpeed = 120});
+
+ // chassis.turnToHeading(-189.3, 1500);
+
+  chassis.moveToPoint(8.7, 36.0, 2000, {.forwards = false, .maxSpeed = 80}, true);
+
+  while (chassis.isInMotion() && distance.get() > 40) {
+    pros::delay(10); // save cpu resources
+  }
+  chassis.cancelMotion();
+  mogoClamp.set_value(true);
+  pros::delay(500);
+  //chassis.moveToPoint(8.2, 32.0, 2000, {.forwards = true, .maxSpeed = 80}, true);
+
+  //chassis.turnToHeading(-82.9, 2000, {.maxSpeed = 80} , false);
+
+  //intake1.move_velocity(600);
+
+  //chassis.moveToPoint(0, 39.2, 2000);
 }
 
 
@@ -234,10 +259,10 @@ void skills() {
   arm.move_absolute(3000, 80);
 }
 
-void (*autonFunctions[])() = {redRingRush, redGoalRush, blueRingRush, blueGoalRush, skills};
+void (*autonFunctions[])() = {redRingRush, BGoalRush, blueRingRush, blueGoalRush, skills};
 
 int autonSelect = 1;
-std::string autonNames[5] = {"redRingRush", "redGoalRush", "blueRingRush", "blueGoalRush", "Skills"};
+std::string autonNames[5] = {"redRingRush", "BGoalRush", "blueRingRush", "blueGoalRush", "Skills"};
 
 void previousAuton() {
   if (autonSelect == 0) {

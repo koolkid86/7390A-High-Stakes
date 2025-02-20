@@ -1,6 +1,8 @@
+#include "constants.hpp"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "main.h"
 #include "pros/adi.hpp"
+#include "pros/optical.hpp"
 
 
 // MOTORS
@@ -21,4 +23,4 @@ pros::Distance distance(11);
 pros::Imu imu(18);
 pros::adi::Encoder encoder('C', 'D', true);
 
-
+pros::Optical optical(12);

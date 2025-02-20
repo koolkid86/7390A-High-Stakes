@@ -1,6 +1,7 @@
 #include "main.h"
 #include "pros/misc.h"
 #include "pros/rtos.hpp"
+#include "globals.hpp"
 
 
 extern pros::adi::DigitalOut brownLady;
@@ -28,7 +29,11 @@ void nextState() {
 
 void liftControl() {
     double kp = 1;
-    if ( target > 100 || target < 5){
+
+    if (target == 220){
+        kp = 0.3;
+    }
+    else if( target > 100 || target < 5){
         kp = 1;
     }
     else{
@@ -39,12 +44,13 @@ void liftControl() {
     double velocity = kp * error;
     arm.move(-velocity);
 
-    if (target > 30){
+    if (target > 30 && usePiston){
         brownLady.set_value(true);
     }
     else {
         brownLady.set_value(false);
     }
+   
 
 
 

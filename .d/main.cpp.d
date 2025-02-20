@@ -140,7 +140,8 @@ bin/main.cpp.o: src/main.cpp include/main.h include/pros/adi.hpp \
  include/fmt/args.h include/lemlib/logger/message.hpp \
  include/lemlib/logger/infoSink.hpp \
  include/lemlib/logger/telemetrySink.hpp include/auton.hpp include/main.h \
- src/armcontrol.hpp
+ src/armcontrol.hpp src/globals.hpp src/constants.hpp \
+ include/pros/optical.hpp
 include/main.h:
 include/pros/adi.hpp:
 include/pros/adi.h:
@@ -381,3 +382,6 @@ include/lemlib/logger/telemetrySink.hpp:
 include/auton.hpp:
 include/main.h:
 src/armcontrol.hpp:
+src/globals.hpp:
+src/constants.hpp:
+include/pros/optical.hpp:

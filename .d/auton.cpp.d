@@ -140,7 +140,7 @@ bin/auton.cpp.o: src/auton.cpp include/lemlib/api.hpp \
  include/pros/optical.hpp include/pros/optical.h \
  include/pros/rotation.hpp include/pros/rtos.hpp include/pros/screen.hpp \
  include/pros/screen.h include/pros/vision.hpp include/pros/vision.h \
- src/armcontrol.hpp
+ src/armcontrol.hpp src/globals.hpp src/colorsort.hpp
 include/lemlib/api.hpp:
 include/lemlib/pid.hpp:
 include/lemlib/pose.hpp:
@@ -379,3 +379,5 @@ include/pros/screen.h:
 include/pros/vision.hpp:
 include/pros/vision.h:
 src/armcontrol.hpp:
+src/globals.hpp:
+src/colorsort.hpp:

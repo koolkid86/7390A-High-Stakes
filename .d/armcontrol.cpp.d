@@ -139,7 +139,7 @@ bin/armcontrol.cpp.o: src/armcontrol.cpp include/main.h \
  include/fmt/format-inl.h include/lemlib/logger/baseSink.hpp \
  include/fmt/args.h include/lemlib/logger/message.hpp \
  include/lemlib/logger/infoSink.hpp \
- include/lemlib/logger/telemetrySink.hpp
+ include/lemlib/logger/telemetrySink.hpp src/globals.hpp
 include/main.h:
 include/pros/adi.hpp:
 include/pros/adi.h:
@@ -377,3 +377,4 @@ include/fmt/args.h:
 include/lemlib/logger/message.hpp:
 include/lemlib/logger/infoSink.hpp:
 include/lemlib/logger/telemetrySink.hpp:
+src/globals.hpp:
