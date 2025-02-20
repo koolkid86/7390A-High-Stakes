@@ -206,9 +206,9 @@ void RGoalRush(){
   chassis.moveToPoint(3, 17, 7000,{.forwards = false}, false);
   
   doinker.set_value(false);
-  chassis.turnToHeading(106.7, 1500, {.minSpeed = 20}, false);
+  chassis.turnToHeading(91.7, 1500, {.minSpeed = 20}, false);
 
-  chassis.moveToPoint(-12.1, 25.2, 2000, {.forwards = false, .maxSpeed = 70}, true);
+  chassis.moveToPoint(-15.2, 20.7, 2000, {.forwards = false, .maxSpeed = 70}, true);
 
   while (chassis.isInMotion() && distance.get() > 40) {
     pros::delay(10); // save cpu resources
